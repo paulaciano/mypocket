@@ -1,0 +1,47 @@
+# Checks run on Mondays and Thursdays (never more often than every 3 days)
+# and only propose versions published at least 3 days earlier.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: cron
+      cronjob: "0 6 * * 1,4"
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: cron
+      cronjob: "0 6 * * 1,4"
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: docker
+    directory: /services/wallet-core
+    schedule:
+      interval: cron
+      cronjob: "0 6 * * 1,4"
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: cron
+      cronjob: "0 6 * * 1,4"
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: chore
+      include: scope

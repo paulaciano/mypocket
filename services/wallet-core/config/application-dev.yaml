@@ -1,0 +1,5 @@
+# Local development only. Example values, never used outside a developer machine.
+# Loaded from ./config when running from services/wallet-core, so it is not packaged in the jar.
+MYPOCKET_DB_URL: jdbc:postgresql://localhost:5432/mypocket
+MYPOCKET_DB_USERNAME: mypocket
+MYPOCKET_DB_PASSWORD: mypocket-dev-example

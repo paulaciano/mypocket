@@ -1,0 +1,7 @@
+# Allowlist: only what the image builds need.
+*
+!mvnw
+!.mvn/
+!pom.xml
+!services/wallet-core/pom.xml
+!services/wallet-core/src/
