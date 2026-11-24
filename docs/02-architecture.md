@@ -55,12 +55,21 @@ mypocket/
 └── compose.yaml
 ```
 
+## Java packages
+
+Each service's base package is named after its module, so the package and the directory match:
+
+| Module | Base package |
+|---|---|
+| `services/wallet-core` | `com.amillioncodelines.mypocket.walletcore` |
+| `services/fraud-detector` | `com.amillioncodelines.mypocket.frauddetector` |
+
 ## wallet-core internal structure
 
 A modular monolith organized **by feature**, each with the same small set of layers:
 
 ```
-com.amillioncodelines.mypocket.wallet
+com.amillioncodelines.mypocket.walletcore
 ├── user/        # registration, login, roles; the only place with personal data
 ├── wallet/      # wallets and lifecycle
 ├── ledger/      # transactions, entries, balance updates, history
