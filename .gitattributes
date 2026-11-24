@@ -1,2 +1,3 @@
 mvnw text eol=lf
-*.cmd text eol=crlf
+# Windows scripts are stored as published, with CRLF line endings.
+*.cmd -text
