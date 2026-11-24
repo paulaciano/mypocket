@@ -19,21 +19,21 @@ at `/v3/api-docs`, with Swagger UI at `/swagger-ui.html` (development profile on
 
 ```json
 {
-  "type": "about:blank",
   "title": "Insufficient funds",
   "status": 422,
   "code": "INSUFFICIENT_FUNDS",
-  "detail": "Wallet balance does not cover the requested amount."
+  "detail": "Wallet balance does not cover the requested amount.",
+  "instance": "/api/v1/transfers"
 }
 ```
 
 | Status | When |
 |---|---|
-| 400 | Malformed request or field validation failure (`VALIDATION_ERROR`) |
-| 401 | Missing or invalid token, invalid webhook signature |
+| 400 | Field validation failure (`VALIDATION_ERROR`, with an `errors` list of `field` and `message`) or malformed body / unknown fields (`MALFORMED_REQUEST`) |
+| 401 | Missing or invalid token (`UNAUTHORIZED`), invalid webhook signature |
 | 403 | Authenticated but not allowed (customer calling an admin endpoint) |
 | 404 | Resource does not exist or belongs to someone else (W10) |
-| 409 | Conflicting state: email taken, idempotency key reused with another body, settling an already settled withdrawal with another outcome |
+| 409 | Conflicting state: email already registered (`EMAIL_ALREADY_REGISTERED`), idempotency key reused with another body, settling an already settled withdrawal with another outcome |
 | 422 | Business rule rejected the operation (`INSUFFICIENT_FUNDS`, `WALLET_CANNOT_SEND`, `WALLET_CANNOT_RECEIVE`, `ACCOUNT_NOT_FOUND`, `LIMIT_EXCEEDED`, `CURRENCY_MISMATCH`, …) |
 
 ## Endpoints
@@ -42,7 +42,7 @@ at `/v3/api-docs`, with Swagger UI at `/swagger-ui.html` (development profile on
 
 | Method | Path | Description | Rules |
 |---|---|---|---|
-| POST | `/auth/register` | Register a customer (email and password) and open their wallets. `201` with user id and wallets. | U1–U3 |
+| POST | `/auth/register` | Register a customer (email and password) and open their wallets. `201` with user id, email and wallets. | U1–U3, W1, W2 |
 | POST | `/auth/login` | Exchange email and password for an access token. | U4 |
 
 ```http
@@ -51,6 +51,17 @@ POST /api/v1/auth/login
 
 200 OK
 { "accessToken": "eyJ...", "tokenType": "Bearer", "expiresIn": 900 }
+```
+
+```http
+POST /api/v1/auth/register
+{ "email": "ana@example.com", "password": "correct horse" }
+
+201 Created
+{ "userId": "…", "email": "ana@example.com",
+  "wallets": [
+    { "id": "…", "accountNumber": "7310582940", "currency": "ARS", "status": "ACTIVE", "balance": "0.00" },
+    { "id": "…", "accountNumber": "4829103755", "currency": "USD", "status": "ACTIVE", "balance": "0.00" } ] }
 ```
 
 ### Customer
@@ -70,10 +81,10 @@ POST /api/v1/auth/login
 ```http
 POST /api/v1/transfers
 Idempotency-Key: 7f9c2ba4-e88f-11ee-8a1b-0242ac120002
-{ "sourceWalletId": "…", "destinationAccountNumber": "4829103756", "amount": "2500.00", "description": "Dinner" }
+{ "sourceWalletId": "…", "destinationAccountNumber": "4829103755", "amount": "2500.00", "description": "Dinner" }
 
 201 Created
-{ "id": "…", "sourceAccountNumber": "7310582946", "destinationAccountNumber": "4829103756",
+{ "id": "…", "sourceAccountNumber": "7310582940", "destinationAccountNumber": "4829103755",
   "currency": "ARS", "amount": "2500.00", "description": "Dinner", "createdAt": "2026-11-20T15:04:05Z" }
 ```
 
