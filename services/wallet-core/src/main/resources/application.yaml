@@ -14,6 +14,12 @@ spring:
       ddl-auto: validate
   flyway:
     locations: classpath:db/migration
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+  mvc:
+    problemdetails:
+      enabled: true
 
 management:
   endpoints:
