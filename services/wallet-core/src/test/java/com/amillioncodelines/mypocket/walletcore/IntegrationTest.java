@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 /** Full application context against a real PostgreSQL, shared across test classes. */
 @Target(ElementType.TYPE)
@@ -14,4 +15,5 @@ import org.springframework.context.annotation.Import;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
+@ActiveProfiles("test")
 public @interface IntegrationTest {}
