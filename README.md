@@ -20,7 +20,7 @@ Maven is not required: the project ships the Maven wrapper (`./mvnw`).
 ```
 
 Checks formatting, compiles and runs all tests against a real PostgreSQL started by Testcontainers.
-Fix formatting with `./mvnw spotless:apply`.
+Fix formatting with `./mvnw -pl services/wallet-core spotless:apply`.
 
 ## Run
 
