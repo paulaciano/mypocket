@@ -29,10 +29,10 @@ at `/v3/api-docs`, with Swagger UI at `/swagger-ui.html` (development profile on
 
 | Status | When |
 |---|---|
-| 400 | Field validation failure (`VALIDATION_ERROR`, with an `errors` list of `field` and `message`) or malformed body / unknown fields (`MALFORMED_REQUEST`) |
+| 400 | Invalid field or path parameter (`VALIDATION_ERROR`, with an `errors` list of `field` and `message`) or malformed body / unknown fields (`MALFORMED_REQUEST`) |
 | 401 | Missing or invalid token (`UNAUTHORIZED`), wrong login credentials (`INVALID_CREDENTIALS`), invalid webhook signature |
 | 403 | Authenticated but not allowed for the role: a customer calling an admin endpoint or an administrator calling a customer endpoint (`FORBIDDEN`) |
-| 404 | Resource does not exist or belongs to someone else (W10) |
+| 404 | Resource does not exist or belongs to someone else (W10), for example `WALLET_NOT_FOUND` |
 | 409 | Conflicting state: email already registered (`EMAIL_ALREADY_REGISTERED`), idempotency key reused with another body, settling an already settled withdrawal with another outcome |
 | 422 | Business rule rejected the operation (`INSUFFICIENT_FUNDS`, `WALLET_CANNOT_SEND`, `WALLET_CANNOT_RECEIVE`, `ACCOUNT_NOT_FOUND`, `LIMIT_EXCEEDED`, `CURRENCY_MISMATCH`, …) |
 
@@ -68,15 +68,24 @@ POST /api/v1/auth/register
 
 | Method | Path | Description | Rules |
 |---|---|---|---|
-| GET | `/me` | Current user. | |
-| GET | `/wallets` | My wallets with account number, balance and status. | W10 |
-| GET | `/wallets/{walletId}` | One of my wallets. | W10 |
+| GET | `/me` | Current user: id, email and role. | P1 |
+| GET | `/wallets` | My wallets with account number, balance and status, ARS first. | W10 |
+| GET | `/wallets/{walletId}` | One of my wallets; another customer's wallet answers `404 WALLET_NOT_FOUND`. | W10, S4 |
 | GET | `/wallets/{walletId}/entries` | Wallet history, newest first, paginated. | L6 |
 | POST | `/wallets/{walletId}/close` | Close the wallet. `200` with the wallet. | W8, W9 |
 | POST | `/transfers` | Send money. **Idempotency-Key.** `201`. | T1–T8, I1–I6 |
 | GET | `/transfers/{transferId}` | A transfer I sent or received. | |
 | POST | `/wallets/{walletId}/withdrawals` | Request a withdrawal. **Idempotency-Key.** `202` with status `PENDING`. | CO1–CO5, I1–I6 |
 | GET | `/withdrawals/{withdrawalId}` | One of my withdrawals. | |
+
+```http
+GET /api/v1/wallets
+Authorization: Bearer eyJ...
+
+200 OK
+[ { "id": "…", "accountNumber": "7310582940", "currency": "ARS", "status": "ACTIVE", "balance": "0.00" },
+  { "id": "…", "accountNumber": "4829103755", "currency": "USD", "status": "ACTIVE", "balance": "0.00" } ]
+```
 
 ```http
 POST /api/v1/transfers

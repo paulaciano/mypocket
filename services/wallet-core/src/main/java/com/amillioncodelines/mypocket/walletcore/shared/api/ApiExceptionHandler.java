@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -51,6 +52,18 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                         "message", String.valueOf(fieldError.getDefaultMessage())))
                 .toList();
         problem.setProperty("errors", errors);
+        return handleExceptionInternal(ex, problem, headers, status, request);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+            TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        var problem = ProblemDetail.forStatusAndDetail(status, "One or more fields are invalid.");
+        problem.setTitle("Validation error");
+        problem.setProperty("code", "VALIDATION_ERROR");
+        problem.setProperty(
+                "errors",
+                List.of(Map.of("field", String.valueOf(ex.getPropertyName()), "message", "has an invalid format")));
         return handleExceptionInternal(ex, problem, headers, status, request);
     }
 
