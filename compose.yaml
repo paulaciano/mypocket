@@ -1,0 +1,36 @@
+# Local platform. All credentials below are example values for development only.
+name: mypocket
+
+services:
+  postgres:
+    image: postgres:18.7-alpine
+    environment:
+      POSTGRES_DB: mypocket
+      POSTGRES_USER: mypocket
+      POSTGRES_PASSWORD: mypocket-dev-example
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mypocket -d mypocket"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  wallet-core:
+    build:
+      context: .
+      dockerfile: services/wallet-core/Dockerfile
+    environment:
+      MYPOCKET_DB_URL: jdbc:postgresql://postgres:5432/mypocket
+      MYPOCKET_DB_USERNAME: mypocket
+      MYPOCKET_DB_PASSWORD: mypocket-dev-example
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
