@@ -32,6 +32,9 @@ management:
         enabled: true
 
 mypocket:
+  admin:
+    email: ${MYPOCKET_ADMIN_EMAIL:}
+    password: ${MYPOCKET_ADMIN_PASSWORD:}
   security:
     jwt:
       secret: ${MYPOCKET_JWT_SECRET}

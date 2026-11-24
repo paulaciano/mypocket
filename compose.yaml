@@ -28,6 +28,8 @@ services:
       MYPOCKET_DB_USERNAME: mypocket
       MYPOCKET_DB_PASSWORD: mypocket-dev-example
       MYPOCKET_JWT_SECRET: dev-example-jwt-secret-of-at-least-32-bytes
+      MYPOCKET_ADMIN_EMAIL: admin@example.com
+      MYPOCKET_ADMIN_PASSWORD: admin-dev-example
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

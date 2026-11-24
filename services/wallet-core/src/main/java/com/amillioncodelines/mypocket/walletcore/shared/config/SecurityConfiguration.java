@@ -18,7 +18,7 @@ class SecurityConfiguration {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        var entryPoint = new ProblemAuthenticationEntryPoint();
+        var problems = new ProblemSecurityHandler();
         return http
                 // Stateless JSON API without cookies: CSRF protection does not apply.
                 .csrf(csrf -> csrf.disable())
@@ -28,11 +28,16 @@ class SecurityConfiguration {
                                 .permitAll()
                                 .requestMatchers("/actuator/health/**", "/error")
                                 .permitAll()
+                                .requestMatchers("/api/v1/admin/**")
+                                .hasRole("ADMIN")
+                                .requestMatchers("/api/v1/**")
+                                .hasRole("CUSTOMER")
                                 .anyRequest()
-                                .authenticated())
-                .oauth2ResourceServer(oauth2 -> oauth2.authenticationEntryPoint(entryPoint)
+                                .denyAll())
+                .oauth2ResourceServer(oauth2 -> oauth2.authenticationEntryPoint(problems)
+                        .accessDeniedHandler(problems)
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(entryPoint))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(problems).accessDeniedHandler(problems))
                 .build();
     }
 
