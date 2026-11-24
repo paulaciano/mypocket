@@ -23,9 +23,11 @@ services:
       context: .
       dockerfile: services/wallet-core/Dockerfile
     environment:
+      SPRING_PROFILES_ACTIVE: dev
       MYPOCKET_DB_URL: jdbc:postgresql://postgres:5432/mypocket
       MYPOCKET_DB_USERNAME: mypocket
       MYPOCKET_DB_PASSWORD: mypocket-dev-example
+      MYPOCKET_JWT_SECRET: dev-example-jwt-secret-of-at-least-32-bytes
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

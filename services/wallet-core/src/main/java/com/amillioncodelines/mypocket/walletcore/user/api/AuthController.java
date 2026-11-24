@@ -1,5 +1,6 @@
 package com.amillioncodelines.mypocket.walletcore.user.api;
 
+import com.amillioncodelines.mypocket.walletcore.user.application.LoginService;
 import com.amillioncodelines.mypocket.walletcore.user.application.RegistrationService;
 import com.amillioncodelines.mypocket.walletcore.wallet.api.WalletResponse;
 import jakarta.validation.Valid;
@@ -15,9 +16,17 @@ import org.springframework.web.bind.annotation.RestController;
 class AuthController {
 
     private final RegistrationService registrationService;
+    private final LoginService loginService;
 
-    AuthController(RegistrationService registrationService) {
+    AuthController(RegistrationService registrationService, LoginService loginService) {
         this.registrationService = registrationService;
+        this.loginService = loginService;
+    }
+
+    @PostMapping("/login")
+    LoginResponse login(@Valid @RequestBody LoginRequest request) {
+        var token = loginService.login(request.email(), request.password());
+        return new LoginResponse(token.value(), "Bearer", token.expiresIn().toSeconds());
     }
 
     @PostMapping("/register")

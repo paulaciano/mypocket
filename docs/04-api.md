@@ -30,7 +30,7 @@ at `/v3/api-docs`, with Swagger UI at `/swagger-ui.html` (development profile on
 | Status | When |
 |---|---|
 | 400 | Field validation failure (`VALIDATION_ERROR`, with an `errors` list of `field` and `message`) or malformed body / unknown fields (`MALFORMED_REQUEST`) |
-| 401 | Missing or invalid token (`UNAUTHORIZED`), invalid webhook signature |
+| 401 | Missing or invalid token (`UNAUTHORIZED`), wrong login credentials (`INVALID_CREDENTIALS`), invalid webhook signature |
 | 403 | Authenticated but not allowed (customer calling an admin endpoint) |
 | 404 | Resource does not exist or belongs to someone else (W10) |
 | 409 | Conflicting state: email already registered (`EMAIL_ALREADY_REGISTERED`), idempotency key reused with another body, settling an already settled withdrawal with another outcome |
