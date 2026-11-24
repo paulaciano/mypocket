@@ -18,7 +18,7 @@
 
     <properties>
         <java.version>25</java.version>
-        <spotless-maven-plugin.version>3.11.0</spotless-maven-plugin.version>
+        <spotless-maven-plugin.version>3.12.0</spotless-maven-plugin.version>
         <palantir-java-format.version>2.103.0</palantir-java-format.version>
         <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
         <spring-boot.run.profiles>dev</spring-boot.run.profiles>
