@@ -31,7 +31,7 @@ at `/v3/api-docs`, with Swagger UI at `/swagger-ui.html` (development profile on
 |---|---|
 | 400 | Field validation failure (`VALIDATION_ERROR`, with an `errors` list of `field` and `message`) or malformed body / unknown fields (`MALFORMED_REQUEST`) |
 | 401 | Missing or invalid token (`UNAUTHORIZED`), wrong login credentials (`INVALID_CREDENTIALS`), invalid webhook signature |
-| 403 | Authenticated but not allowed (customer calling an admin endpoint) |
+| 403 | Authenticated but not allowed for the role: a customer calling an admin endpoint or an administrator calling a customer endpoint (`FORBIDDEN`) |
 | 404 | Resource does not exist or belongs to someone else (W10) |
 | 409 | Conflicting state: email already registered (`EMAIL_ALREADY_REGISTERED`), idempotency key reused with another body, settling an already settled withdrawal with another outcome |
 | 422 | Business rule rejected the operation (`INSUFFICIENT_FUNDS`, `WALLET_CANNOT_SEND`, `WALLET_CANNOT_RECEIVE`, `ACCOUNT_NOT_FOUND`, `LIMIT_EXCEEDED`, `CURRENCY_MISMATCH`, …) |

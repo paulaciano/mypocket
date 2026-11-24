@@ -16,6 +16,9 @@ import org.hibernate.annotations.UuidGenerator;
 @Table(name = "users")
 public class User {
 
+    public static final int MIN_PASSWORD_LENGTH = 8;
+    public static final int MAX_PASSWORD_LENGTH = 64;
+
     @Id
     @GeneratedValue
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
@@ -45,6 +48,16 @@ public class User {
 
     public static User customer(String email, String passwordHash, Instant now) {
         return new User(email, passwordHash, Role.CUSTOMER, now);
+    }
+
+    public static User admin(String email, String passwordHash, Instant now) {
+        return new User(email, passwordHash, Role.ADMIN, now);
+    }
+
+    public static boolean isAcceptablePassword(String rawPassword) {
+        return rawPassword != null
+                && rawPassword.length() >= MIN_PASSWORD_LENGTH
+                && rawPassword.length() <= MAX_PASSWORD_LENGTH;
     }
 
     public static String normalizeEmail(String email) {
