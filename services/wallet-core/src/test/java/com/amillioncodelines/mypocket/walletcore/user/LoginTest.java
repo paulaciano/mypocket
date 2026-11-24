@@ -90,6 +90,17 @@ class LoginTest {
     }
 
     @Test
+    @DisplayName("U4: a password over 72 bytes is just wrong credentials")
+    void overlongPasswordIsInvalidCredentials() throws Exception {
+        var email = uniqueEmail();
+        registrationService.registerCustomer(email, "secret-pass");
+
+        login(email, "ñ".repeat(40))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
+    }
+
+    @Test
     @DisplayName("S1: a valid token authenticates requests")
     void acceptsValidToken() throws Exception {
         var token = tokenFor(UUID.randomUUID(), Instant.now(), jwtEncoder);

@@ -56,8 +56,8 @@ The balance of a wallet is `sum(CREDIT) − sum(DEBIT)` of its entries.
 - **M4** Money only moves between wallets of the same currency.
 
 ### Users (U)
-- **U1** Email is required, must be a valid address and is unique ignoring case. It is used only to log in (P1).
-- **U2** Password has between 8 and 64 characters. It is stored only as a hash.
+- **U1** Email is required, must be a valid address of at most 254 characters, and is unique ignoring case. It is used only to log in (P1).
+- **U2** Password is not blank and has between 8 and 64 characters, and at most 72 bytes in UTF-8 (the limit of the hashing algorithm; longer passwords are rejected, never truncated). It is stored only as a hash.
 - **U3** Registering creates the user with role `CUSTOMER` and one `ACTIVE` wallet per supported currency, with zero balance, in the same transaction.
 - **U4** Login with a wrong email or a wrong password gives the same error, so it does not reveal whether the email exists.
 - **U5** The administrator account is created at startup from configuration if it does not exist. Registration never creates administrators.

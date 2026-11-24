@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.UUID;
@@ -16,8 +17,11 @@ import org.hibernate.annotations.UuidGenerator;
 @Table(name = "users")
 public class User {
 
+    public static final int MAX_EMAIL_LENGTH = 254;
     public static final int MIN_PASSWORD_LENGTH = 8;
     public static final int MAX_PASSWORD_LENGTH = 64;
+    // BCrypt only uses the first 72 bytes; longer passwords are rejected rather than truncated.
+    public static final int MAX_PASSWORD_BYTES = 72;
 
     @Id
     @GeneratedValue
@@ -56,8 +60,10 @@ public class User {
 
     public static boolean isAcceptablePassword(String rawPassword) {
         return rawPassword != null
+                && !rawPassword.isBlank()
                 && rawPassword.length() >= MIN_PASSWORD_LENGTH
-                && rawPassword.length() <= MAX_PASSWORD_LENGTH;
+                && rawPassword.length() <= MAX_PASSWORD_LENGTH
+                && rawPassword.getBytes(StandardCharsets.UTF_8).length <= MAX_PASSWORD_BYTES;
     }
 
     public static String normalizeEmail(String email) {
