@@ -1,5 +1,5 @@
 # Build context: repository root (see compose.yaml).
-FROM eclipse-temurin:25.0.5_8-jdk-noble AS build
+FROM eclipse-temurin:25.0.5.1_2-jdk-noble AS build
 # The Maven wrapper needs unzip to install the verified Maven distribution.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends unzip \
@@ -13,7 +13,7 @@ COPY services/wallet-core/src services/wallet-core/src
 RUN --mount=type=cache,target=/root/.m2 \
     ./mvnw -B -q -pl services/wallet-core package -DskipTests -Dspotless.check.skip=true -Djacoco.skip=true
 
-FROM eclipse-temurin:25.0.5_8-jre-noble
+FROM eclipse-temurin:25.0.5.1_2-jre-noble
 RUN useradd --system --uid 10001 --no-create-home app
 WORKDIR /app
 COPY --from=build /workspace/services/wallet-core/target/wallet-core-*.jar app.jar
