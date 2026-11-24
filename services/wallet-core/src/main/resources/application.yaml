@@ -8,6 +8,10 @@ spring:
     url: ${MYPOCKET_DB_URL}
     username: ${MYPOCKET_DB_USERNAME}
     password: ${MYPOCKET_DB_PASSWORD}
+    hikari:
+      data-source-properties:
+        # PostgreSQL error details quote the offending values (e.g. a duplicate email); keep them out of logs (P1).
+        logServerErrorDetail: false
   jpa:
     open-in-view: false
     hibernate:
