@@ -12,7 +12,7 @@
 
     <groupId>com.amillioncodelines.mypocket</groupId>
     <artifactId>wallet-core</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <name>MyPocket wallet-core</name>
     <description>Users, wallets, ledger and money movements.</description>
 
