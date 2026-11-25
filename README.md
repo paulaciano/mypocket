@@ -3,8 +3,8 @@
 Backend core of a digital wallet: multi-currency wallets, cash-in, instant P2P transfers and
 withdrawals, on an immutable double-entry ledger, with real-time fraud detection through Kafka events.
 
-> **Status:** under development, working towards `0.1.0`. See the [documentation](docs/README.md) and
-> the [roadmap](docs/07-roadmap.md).
+> **Status:** `0.1.0`: users, login and wallets. Next: ledger and cash-in. See the
+> [documentation](docs/README.md), the [roadmap](docs/07-roadmap.md) and the [changelog](CHANGELOG.md).
 
 ## Requirements
 
