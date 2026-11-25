@@ -30,6 +30,8 @@ services:
       MYPOCKET_JWT_SECRET: dev-example-jwt-secret-of-at-least-32-bytes
       MYPOCKET_ADMIN_EMAIL: admin@example.com
       MYPOCKET_ADMIN_PASSWORD: admin-dev-example
+      SPRINGDOC_API_DOCS_ENABLED: "true"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "true"
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

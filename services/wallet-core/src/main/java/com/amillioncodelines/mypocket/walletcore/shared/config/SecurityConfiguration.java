@@ -25,7 +25,11 @@ class SecurityConfiguration {
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/v1/auth/register"),
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/v1/auth/login"),
             PathPatternRequestMatcher.withDefaults().matcher("/actuator/health/**"),
-            PathPatternRequestMatcher.withDefaults().matcher("/error"));
+            PathPatternRequestMatcher.withDefaults().matcher("/error"),
+            // Only served when the development profile enables them (S13).
+            PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/v3/api-docs/**"),
+            PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/swagger-ui.html"),
+            PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/swagger-ui/**"));
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

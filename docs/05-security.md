@@ -47,7 +47,7 @@
 
 - **S12** `/actuator/prometheus` and the other actuator endpoints except `health` are not exposed
   outside the Docker network in `compose.yaml`.
-- **S13** Swagger UI is enabled only in the development profile.
+- **S13** The OpenAPI description and Swagger UI are served only in the development profile.
 
 ## Supply chain
 
