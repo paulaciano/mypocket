@@ -25,6 +25,13 @@ spring:
     problemdetails:
       enabled: true
 
+# The API description and Swagger UI are switched on only by the development profile (S13).
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 management:
   endpoints:
     web:

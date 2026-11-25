@@ -21,6 +21,7 @@
         <spotless-maven-plugin.version>3.12.0</spotless-maven-plugin.version>
         <palantir-java-format.version>2.103.0</palantir-java-format.version>
         <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
+        <springdoc-openapi.version>3.2.0</springdoc-openapi.version>
         <spring-boot.run.profiles>dev</spring-boot.run.profiles>
     </properties>
 
@@ -61,6 +62,11 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc-openapi.version}</version>
         </dependency>
 
         <dependency>

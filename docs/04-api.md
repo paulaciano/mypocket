@@ -1,7 +1,7 @@
 # 4. API Design
 
-REST over JSON. Base path `/api/v1`. The OpenAPI description is generated from the code and served
-at `/v3/api-docs`, with Swagger UI at `/swagger-ui.html` (development profile only).
+REST over JSON. Base path `/api/v1`. The OpenAPI description is generated from the code. In the
+development profile only, it is served at `/v3/api-docs`, with Swagger UI at `/swagger-ui.html`.
 
 ## Conventions
 

@@ -3,6 +3,7 @@ package com.amillioncodelines.mypocket.walletcore.user.api;
 import com.amillioncodelines.mypocket.walletcore.user.application.LoginService;
 import com.amillioncodelines.mypocket.walletcore.user.application.RegistrationService;
 import com.amillioncodelines.mypocket.walletcore.wallet.api.WalletResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+// Public endpoints: no bearer token in the API description.
+@SecurityRequirements
 @RequestMapping("/api/v1/auth")
 class AuthController {
 

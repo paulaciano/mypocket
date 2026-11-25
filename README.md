@@ -31,8 +31,9 @@ docker compose up --build
 curl localhost:8080/actuator/health
 ```
 
-Both ways use the development profile with example credentials only, and create an administrator
-account `admin@example.com` / `admin-dev-example`.
+Both ways use the development profile with example credentials only, create an administrator
+account `admin@example.com` / `admin-dev-example`, and serve the API reference at
+<http://localhost:8080/swagger-ui.html>.
 
 For development, run PostgreSQL in Docker and the service from the sources:
 
