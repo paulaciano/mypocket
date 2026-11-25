@@ -160,6 +160,37 @@ class RegistrationTest {
     }
 
     @Test
+    @DisplayName("U2: password must not exceed 72 bytes in UTF-8, the BCrypt limit")
+    void limitsPasswordBytes() throws Exception {
+        register(uniqueEmail(), "ñ".repeat(36)).andExpect(status().isCreated());
+        register(uniqueEmail(), "ñ".repeat(37))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("password"));
+    }
+
+    @Test
+    @DisplayName("U2: rejects a password made only of whitespace")
+    void rejectsBlankPassword() throws Exception {
+        register(uniqueEmail(), " ".repeat(8))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("password"));
+    }
+
+    @Test
+    @DisplayName("U1: rejects an email longer than 254 characters once normalized")
+    void rejectsEmailThatGrowsWhenNormalized() throws Exception {
+        var local = "İ".repeat(30) + "a".repeat(34);
+        var domain = "b".repeat(60) + "." + "c".repeat(60) + "." + "d".repeat(60) + "." + "e".repeat(2) + ".com";
+        var email = local + "@" + domain;
+        assertThat(email).hasSize(254);
+
+        register(email, "secret-pass")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.errors[0].field").value("email"));
+    }
+
+    @Test
     @DisplayName("U2: the password is stored only as a BCrypt hash")
     void storesPasswordHash() throws Exception {
         var email = uniqueEmail();

@@ -43,6 +43,10 @@ public class LoginService {
 
     @Transactional(readOnly = true)
     public AccessToken login(String email, String rawPassword) {
+        if (!User.isAcceptablePassword(rawPassword)) {
+            // No account can have such a password, and BCrypt rejects more than 72 bytes.
+            throw new InvalidCredentialsException();
+        }
         var user = users.findByEmail(User.normalizeEmail(email));
         var hash = user.map(User::passwordHash).orElse(dummyHash);
         var matches = passwordEncoder.matches(rawPassword, hash);

@@ -94,6 +94,11 @@ class AdminBootstrapTest {
                 .hasMessageContaining("MYPOCKET_ADMIN_EMAIL");
         assertThatThrownBy(() -> adminBootstrap.createAdminIfMissing(new AdminProperties(uniqueEmail(), "short")))
                 .hasMessageContaining("between 8 and 64");
+        assertThatThrownBy(() -> adminBootstrap.createAdminIfMissing(new AdminProperties("admin@", "admin-password")))
+                .hasMessageContaining("MYPOCKET_ADMIN_EMAIL must be a valid email");
+        assertThatThrownBy(
+                        () -> adminBootstrap.createAdminIfMissing(new AdminProperties(uniqueEmail(), "ñ".repeat(40))))
+                .hasMessageContaining("72 bytes");
     }
 
     private static String uniqueEmail() {
