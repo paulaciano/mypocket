@@ -13,8 +13,8 @@ development profile only, it is served at `/v3/api-docs`, with Swagger UI at `/s
 - **Identifiers:** UUIDs.
 - **Timestamps:** ISO-8601 in UTC (`2026-11-20T15:04:05Z`).
 - **Idempotency:** `Idempotency-Key` header on money-moving customer operations (rules I1–I7).
-- **Pagination:** `?page=0&size=20` (max `size` 100). Responses include `page`, `size`,
-  `totalElements` and `totalPages`.
+- **Pagination:** `?page=0&size=20` (`page` from 0, `size` from 1 to 100). Responses include
+  `content`, `page`, `size`, `totalElements` and `totalPages`.
 - **Errors:** [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) Problem Details
   (`application/problem+json`) with a stable `code` field:
 
@@ -30,7 +30,7 @@ development profile only, it is served at `/v3/api-docs`, with Swagger UI at `/s
 
 | Status | When |
 |---|---|
-| 400 | Invalid field or path parameter (`VALIDATION_ERROR`, with an `errors` list of `field` and `message`) or malformed body / unknown fields (`MALFORMED_REQUEST`) |
+| 400 | Invalid field, path or query parameter (`VALIDATION_ERROR`, with an `errors` list of `field` and `message`) or malformed body / unknown fields (`MALFORMED_REQUEST`) |
 | 401 | Missing or invalid token (`UNAUTHORIZED`), wrong login credentials (`INVALID_CREDENTIALS`), missing, invalid or expired webhook signature (`INVALID_SIGNATURE`) |
 | 403 | Authenticated but not allowed for the role: a customer calling an admin endpoint or an administrator calling a customer endpoint (`FORBIDDEN`) |
 | 404 | Resource does not exist or belongs to someone else (W10), for example `WALLET_NOT_FOUND` |
@@ -88,6 +88,21 @@ Authorization: Bearer eyJ...
 [ { "id": "…", "accountNumber": "7310582940", "currency": "ARS", "status": "ACTIVE", "balance": "0.00" },
   { "id": "…", "accountNumber": "4829103755", "currency": "USD", "status": "ACTIVE", "balance": "0.00" } ]
 ```
+
+```http
+GET /api/v1/wallets/{walletId}/entries?page=0&size=20
+Authorization: Bearer eyJ...
+
+200 OK
+{ "content": [
+    { "id": "…", "transactionId": "…", "type": "TRANSFER", "direction": "DEBIT", "amount": "2500.00",
+      "createdAt": "2026-11-20T15:04:05Z", "counterpartAccountNumber": "4829103755" },
+    { "id": "…", "transactionId": "…", "type": "CASH_IN", "direction": "CREDIT", "amount": "10000.00",
+      "createdAt": "2026-11-20T14:00:00Z", "counterpartAccountNumber": null } ],
+  "page": 0, "size": 20, "totalElements": 2, "totalPages": 1 }
+```
+
+`counterpartAccountNumber` is the other wallet's account number on transfers and `null` otherwise.
 
 ```http
 POST /api/v1/transfers
