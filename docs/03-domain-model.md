@@ -50,7 +50,7 @@ The balance of a wallet is `sum(CREDIT) − sum(DEBIT)` of its entries.
 ## Business rules
 
 ### Money (M)
-- **M1** Amounts are decimal with at most 2 fractional digits, for both ARS and USD. Amounts with more digits are rejected, never rounded.
+- **M1** Amounts are decimal with at most 2 fractional digits and at most 13 integer digits, for both ARS and USD. Amounts with more digits are rejected, never rounded.
 - **M2** Every operation amount is strictly greater than zero.
 - **M3** Supported currencies are ARS and USD. Any other currency is rejected.
 - **M4** Money only moves between wallets of the same currency.
@@ -88,7 +88,7 @@ The balance of a wallet is `sum(CREDIT) − sum(DEBIT)` of its entries.
 
 ### Ledger (L)
 - **L1** Every money movement is one transaction with at least two entries, and the total of its debits equals the total of its credits.
-- **L2** Ledger entries and transactions are never updated or deleted. Corrections are new transactions.
+- **L2** Ledger entries and transactions are never updated or deleted, not even directly in the database. Corrections are new transactions.
 - **L3** The cached balance of a customer wallet always equals the balance computed from its entries.
 - **L4** The balance of a customer wallet is never negative.
 - **L5** System wallets have no cached balance; their balance is always computed from their entries.
