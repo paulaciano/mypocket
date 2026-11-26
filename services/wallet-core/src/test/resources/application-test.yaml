@@ -1,3 +1,4 @@
 MYPOCKET_JWT_SECRET: test-example-jwt-secret-of-at-least-32-bytes
+MYPOCKET_PROVIDER_WEBHOOK_SECRET: test-example-provider-webhook-secret-32-bytes
 MYPOCKET_ADMIN_EMAIL: admin@example.com
 MYPOCKET_ADMIN_PASSWORD: admin-test-example

@@ -26,9 +26,20 @@ class SecretsConfigurationTest {
         assertThatCode(() -> new SecretsConfiguration(productionEnvironment())).doesNotThrowAnyException();
     }
 
+    @Test
+    @DisplayName("S11: outside dev and test, refuses an example webhook secret")
+    void rejectsExampleWebhookSecret() {
+        var environment = productionEnvironment()
+                .withProperty("mypocket.provider.webhook-secret", "an-example-provider-webhook-secret-32-bytes");
+
+        assertThatThrownBy(() -> new SecretsConfiguration(environment))
+                .hasMessage("MYPOCKET_PROVIDER_WEBHOOK_SECRET still has an example value");
+    }
+
     private static MockEnvironment productionEnvironment() {
         return new MockEnvironment()
                 .withProperty("mypocket.security.jwt.secret", STRONG)
+                .withProperty("mypocket.provider.webhook-secret", STRONG)
                 .withProperty("MYPOCKET_DB_PASSWORD", "s3cr3t");
     }
 }

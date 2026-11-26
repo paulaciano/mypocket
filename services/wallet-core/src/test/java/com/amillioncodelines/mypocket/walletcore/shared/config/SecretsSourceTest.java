@@ -18,8 +18,9 @@ class SecretsSourceTest {
         assertThat(config)
                 .contains("${MYPOCKET_DB_PASSWORD}")
                 .contains("${MYPOCKET_JWT_SECRET}")
+                .contains("${MYPOCKET_PROVIDER_WEBHOOK_SECRET}")
                 .contains("${MYPOCKET_ADMIN_PASSWORD:}")
-                .doesNotContainPattern("\\$\\{MYPOCKET_(DB_PASSWORD|JWT_SECRET):")
+                .doesNotContainPattern("\\$\\{MYPOCKET_(DB_PASSWORD|JWT_SECRET|PROVIDER_WEBHOOK_SECRET):")
                 .doesNotContainIgnoringCase("example");
     }
 

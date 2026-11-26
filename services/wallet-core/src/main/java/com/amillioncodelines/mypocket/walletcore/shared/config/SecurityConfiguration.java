@@ -24,6 +24,8 @@ class SecurityConfiguration {
     private static final RequestMatcher PUBLIC_ENDPOINTS = new OrRequestMatcher(
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/v1/auth/register"),
             PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/v1/auth/login"),
+            // Authenticated by the provider signature instead of a JWT (S5).
+            PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/v1/webhooks/**"),
             PathPatternRequestMatcher.withDefaults().matcher("/actuator/health/**"),
             PathPatternRequestMatcher.withDefaults().matcher("/error"),
             // Only served when the development profile enables them (S13).

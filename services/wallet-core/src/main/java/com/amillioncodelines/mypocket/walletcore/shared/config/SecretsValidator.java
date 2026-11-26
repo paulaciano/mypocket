@@ -11,15 +11,18 @@ import java.util.Set;
  */
 final class SecretsValidator {
 
-    static final int MIN_JWT_SECRET_BYTES = 32;
+    static final int MIN_KEY_BYTES = 32;
     private static final Set<String> NON_PRODUCTION_PROFILES = Set.of("dev", "test");
 
     private SecretsValidator() {}
 
-    static void validate(Map<String, String> secrets, String jwtSecret, Set<String> activeProfiles) {
-        if (jwtSecret == null || jwtSecret.getBytes(StandardCharsets.UTF_8).length < MIN_JWT_SECRET_BYTES) {
-            throw new IllegalStateException(
-                    "MYPOCKET_JWT_SECRET must have at least " + MIN_JWT_SECRET_BYTES + " bytes");
+    /** {@code keys} are HMAC keys among {@code secrets}: they need at least 32 bytes in every profile. */
+    static void validate(Map<String, String> secrets, Set<String> keys, Set<String> activeProfiles) {
+        for (var name : keys) {
+            var key = secrets.get(name);
+            if (key == null || key.getBytes(StandardCharsets.UTF_8).length < MIN_KEY_BYTES) {
+                throw new IllegalStateException(name + " must have at least " + MIN_KEY_BYTES + " bytes");
+            }
         }
         if (activeProfiles.stream().anyMatch(NON_PRODUCTION_PROFILES::contains)) {
             return;

@@ -8,7 +8,8 @@ development profile only, it is served at `/v3/api-docs`, with Swagger UI at `/s
 - **Authentication:** `Authorization: Bearer <JWT>` on every endpoint except registration, login,
   webhooks and health.
 - **Amounts:** JSON strings with a dot and up to 2 decimals (`"1500.50"`), never JSON numbers, so no
-  client loses precision ([ADR-0009](adr/0009-money-representation.md)).
+  client loses precision ([ADR-0009](adr/0009-money-representation.md)). A JSON number where a string
+  is expected is rejected as `MALFORMED_REQUEST`.
 - **Identifiers:** UUIDs.
 - **Timestamps:** ISO-8601 in UTC (`2026-11-20T15:04:05Z`).
 - **Idempotency:** `Idempotency-Key` header on money-moving customer operations (rules I1–I7).
@@ -30,10 +31,11 @@ development profile only, it is served at `/v3/api-docs`, with Swagger UI at `/s
 | Status | When |
 |---|---|
 | 400 | Invalid field or path parameter (`VALIDATION_ERROR`, with an `errors` list of `field` and `message`) or malformed body / unknown fields (`MALFORMED_REQUEST`) |
-| 401 | Missing or invalid token (`UNAUTHORIZED`), wrong login credentials (`INVALID_CREDENTIALS`), invalid webhook signature |
+| 401 | Missing or invalid token (`UNAUTHORIZED`), wrong login credentials (`INVALID_CREDENTIALS`), missing, invalid or expired webhook signature (`INVALID_SIGNATURE`) |
 | 403 | Authenticated but not allowed for the role: a customer calling an admin endpoint or an administrator calling a customer endpoint (`FORBIDDEN`) |
 | 404 | Resource does not exist or belongs to someone else (W10), for example `WALLET_NOT_FOUND` |
-| 409 | Conflicting state: email already registered (`EMAIL_ALREADY_REGISTERED`), idempotency key reused with another body, settling an already settled withdrawal with another outcome |
+| 409 | Conflicting state: email already registered (`EMAIL_ALREADY_REGISTERED`), cash-in reference already applied with other data (`CASH_IN_REFERENCE_CONFLICT`), idempotency key reused with another body, settling an already settled withdrawal with another outcome |
+| 413 | Webhook body larger than 16 KB (`PAYLOAD_TOO_LARGE`) |
 | 422 | Business rule rejected the operation (`INSUFFICIENT_FUNDS`, `WALLET_CANNOT_SEND`, `WALLET_CANNOT_RECEIVE`, `ACCOUNT_NOT_FOUND`, `LIMIT_EXCEEDED`, `CURRENCY_MISMATCH`, …) |
 
 ## Endpoints
@@ -109,14 +111,18 @@ Authenticated by HMAC signature, not by JWT ([ADR-0008](adr/0008-signed-provider
 
 | Method | Path | Description | Rules |
 |---|---|---|---|
-| POST | `/webhooks/cash-ins` | Funds arrived for a wallet. `201` first time, `200` on repetition. | CI1–CI5 |
+| POST | `/webhooks/cash-ins` | Funds arrived for a wallet, named by its account number. `201` first time, `200` with the original result on repetition. | CI1–CI7, S5, S6 |
 | POST | `/webhooks/withdrawals/{withdrawalId}/settlement` | Outcome of a withdrawal. | CO6–CO9 |
 
 ```http
 POST /api/v1/webhooks/cash-ins
 X-Provider-Timestamp: 1763650000
 X-Provider-Signature: sha256=5d41402abc4b2a76b9719d911017c592...
-{ "reference": "PRV-000123", "walletId": "…", "currency": "ARS", "amount": "10000.00" }
+{ "reference": "PRV-000123", "accountNumber": "7310582940", "currency": "ARS", "amount": "10000.00" }
+
+201 Created
+{ "id": "…", "reference": "PRV-000123", "accountNumber": "7310582940", "currency": "ARS",
+  "amount": "10000.00", "createdAt": "2026-11-20T15:04:05Z" }
 ```
 
 ```http
