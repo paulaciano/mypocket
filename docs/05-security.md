@@ -15,8 +15,8 @@
 
 - **S5** Provider webhooks carry `X-Provider-Timestamp` (Unix seconds) and `X-Provider-Signature`
   (`sha256=` + hex HMAC-SHA256 of `timestamp + "." + raw body`, with a shared secret). The signature
-  is compared in constant time. Requests older or newer than 5 minutes are rejected
-  ([ADR-0008](adr/0008-signed-provider-webhooks.md)).
+  is compared in constant time, before the body is parsed. Requests older or newer than 5 minutes
+  and bodies larger than 16 KB are rejected ([ADR-0008](adr/0008-signed-provider-webhooks.md)).
 - **S6** Replays inside the 5-minute window have no effect thanks to the provider reference
   deduplication (CI2) and the settlement rules (CO8).
 
@@ -41,7 +41,8 @@
   environment variables. The repository only contains example values in the development profile and
   in `compose.yaml`, clearly marked as non-production.
 - **S11** The application refuses to start outside the development and test profiles if a secret is
-  missing or still has an example value.
+  missing or still has an example value. In every profile, the JWT and webhook secrets must have at
+  least 32 bytes.
 
 ## Network exposure
 

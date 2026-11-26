@@ -104,11 +104,13 @@ The balance of a wallet is `sum(CREDIT) − sum(DEBIT)` of its entries.
 - **I7** Idempotency records do not expire.
 
 ### Cash-in (CI)
-- **CI1** A cash-in arrives only through a provider webhook with a valid signature (see S5).
-- **CI2** A cash-in is identified by the provider's reference. The same reference is applied only once; repeating it returns the original result.
-- **CI3** The same provider reference with different data (wallet, amount or currency) is rejected.
+- **CI1** A cash-in arrives only through a provider webhook with a valid signature (see S5), and names the destination wallet by its account number. An unknown account number is rejected.
+- **CI2** A cash-in is identified by the provider's reference (1 to 100 letters, digits or `.`, `_`, `:`, `-`). The same reference is applied only once; repeating it, even concurrently, returns the original result.
+- **CI3** The same provider reference with different data (account number, amount or currency) is rejected.
 - **CI4** The currency of the cash-in must match the wallet's currency.
-- **CI5** A cash-in to a wallet that cannot receive money (W3) is rejected, and the provider keeps the money.
+- **CI5** A cash-in to a wallet that cannot receive money (W3) is rejected, and the provider keeps the money. A rejected cash-in is not recorded: if the provider retries it, it is evaluated again.
+- **CI6** Cash-ins have no business amount limit; only the format limits of M1 apply.
+- **CI7** Every rejected cash-in is logged with the provider reference, the account number and the reason, and counted in the `mypocket.cashin.rejected` metric by reason.
 
 ### Transfers (T)
 - **T1** The sender chooses one of their wallets and the destination wallet's account number. An unknown account number is rejected.

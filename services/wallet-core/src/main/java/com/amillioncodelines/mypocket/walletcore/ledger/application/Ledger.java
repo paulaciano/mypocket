@@ -10,8 +10,10 @@ import com.amillioncodelines.mypocket.walletcore.shared.domain.Money;
 import com.amillioncodelines.mypocket.walletcore.wallet.domain.Wallet;
 import com.amillioncodelines.mypocket.walletcore.wallet.infrastructure.WalletRepository;
 import java.time.Clock;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -67,12 +69,30 @@ public class Ledger {
             to.credit(money.amount());
         }
 
-        var now = clock.instant();
-        var transaction = transactions.save(new LedgerTransaction(type, money, externalReference, now));
+        // PostgreSQL keeps microseconds: the result returned now must equal the one read back later (CI2).
+        var now = clock.instant().truncatedTo(ChronoUnit.MICROS);
+        var transaction = transactions.saveAndFlush(new LedgerTransaction(type, money, externalReference, now));
         entries.save(new LedgerEntry(transaction.id(), from.id(), EntryDirection.DEBIT, money.amount(), now));
         entries.save(new LedgerEntry(transaction.id(), to.id(), EntryDirection.CREDIT, money.amount(), now));
         return transaction;
     }
+
+    /** A transaction already posted with this external reference, with the wallet it credited. */
+    @Transactional(readOnly = true)
+    public Optional<Posted> findByReference(TransactionType type, String externalReference) {
+        return transactions
+                .findByTypeAndExternalReference(type, externalReference)
+                .map(transaction -> {
+                    var credited = entries.findByTransactionId(transaction.id()).stream()
+                            .filter(entry -> entry.direction() == EntryDirection.CREDIT)
+                            .findFirst()
+                            .orElseThrow()
+                            .walletId();
+                    return new Posted(transaction, credited);
+                });
+    }
+
+    public record Posted(LedgerTransaction transaction, UUID creditedWalletId) {}
 
     private Wallet existing(UUID walletId) {
         return wallets.findById(walletId).orElseThrow(() -> new IllegalArgumentException("Unknown wallet " + walletId));

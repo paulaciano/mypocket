@@ -16,6 +16,8 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
 
     boolean existsByAccountNumber(String accountNumber);
 
+    Optional<Wallet> findByAccountNumber(String accountNumber);
+
     List<Wallet> findByOwnerIdOrderByCurrency(UUID ownerId);
 
     Optional<Wallet> findByIdAndOwnerId(UUID id, UUID ownerId);

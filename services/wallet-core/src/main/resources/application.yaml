@@ -46,6 +46,8 @@ mypocket:
   admin:
     email: ${MYPOCKET_ADMIN_EMAIL:}
     password: ${MYPOCKET_ADMIN_PASSWORD:}
+  provider:
+    webhook-secret: ${MYPOCKET_PROVIDER_WEBHOOK_SECRET}
   security:
     jwt:
       secret: ${MYPOCKET_JWT_SECRET}
