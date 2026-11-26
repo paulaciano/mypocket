@@ -42,6 +42,19 @@ docker compose up -d postgres
 ./mvnw -pl services/wallet-core spring-boot:run
 ```
 
+## Simulate the payment provider
+
+Cash-ins arrive as webhooks signed by the payment provider. `scripts/provider.sh` plays that role
+(it needs `curl` and `openssl`) and uses the development example secret by default:
+
+```bash
+scripts/provider.sh cash-in 7310582940 ARS 1500.50          # account number, currency, amount
+scripts/provider.sh cash-in 7310582940 ARS 1500.50 PRV-001  # with an explicit provider reference
+```
+
+Sending the same reference again returns the original result without crediting the wallet twice.
+`MYPOCKET_URL` and `MYPOCKET_PROVIDER_WEBHOOK_SECRET` override the target and the secret.
+
 ## License
 
 [MIT](LICENSE)
