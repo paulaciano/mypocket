@@ -1,8 +1,9 @@
 # Build context: repository root (see compose.yaml).
 FROM eclipse-temurin:25.0.5.1_2-jdk-noble AS build
-# The Maven wrapper needs unzip to install the verified Maven distribution.
+# The Maven wrapper needs unzip to install the verified Maven distribution, and curl to download it
+# (without curl or wget it falls back to a Java downloader that Maven Central may throttle).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends unzip \
+    && apt-get install -y --no-install-recommends curl unzip \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /workspace
 COPY mvnw pom.xml ./
