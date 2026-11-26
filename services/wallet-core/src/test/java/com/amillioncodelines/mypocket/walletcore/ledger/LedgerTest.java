@@ -113,9 +113,9 @@ class LedgerTest {
 
         assertThat(balance(ars.id())).isEqualByComparingTo("100.00");
         assertThat(entries.computedBalance(ars.id())).isEqualByComparingTo("100.00");
-        assertThat(jdbc.queryForObject(
-                        "select count(*) from ledger_entries where wallet_id = ?", Long.class, inTransit))
-                .isZero();
+        // Only the cash-in: the rejected withdrawal left no entry (the in-transit wallet is shared by other tests).
+        assertThat(jdbc.queryForObject("select count(*) from ledger_entries where wallet_id = ?", Long.class, ars.id()))
+                .isEqualTo(1L);
     }
 
     @Test
