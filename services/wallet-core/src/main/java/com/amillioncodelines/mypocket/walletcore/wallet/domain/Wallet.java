@@ -22,10 +22,18 @@ public class Wallet {
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     private UUID id;
 
-    @Column(name = "account_number", nullable = false, updatable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, updatable = false)
+    private WalletKind kind;
+
+    @Enumerated(EnumType.STRING)
+    @Column(updatable = false)
+    private SystemPurpose purpose;
+
+    @Column(name = "account_number", updatable = false)
     private String accountNumber;
 
-    @Column(name = "owner_id", nullable = false, updatable = false)
+    @Column(name = "owner_id", updatable = false)
     private UUID ownerId;
 
     @Enumerated(EnumType.STRING)
@@ -36,7 +44,7 @@ public class Wallet {
     @Column(nullable = false)
     private WalletStatus status;
 
-    @Column(nullable = false)
+    /** Cached balance of a customer wallet; {@code null} for system wallets (L5). */
     private BigDecimal balance;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -45,6 +53,7 @@ public class Wallet {
     protected Wallet() {}
 
     private Wallet(String accountNumber, UUID ownerId, Currency currency, Instant createdAt) {
+        this.kind = WalletKind.CUSTOMER;
         this.accountNumber = accountNumber;
         this.ownerId = ownerId;
         this.currency = currency;
@@ -57,8 +66,44 @@ public class Wallet {
         return new Wallet(accountNumber, ownerId, currency, now);
     }
 
+    /** Only the ledger changes balances, with the wallet row locked (ADR-0004). */
+    public void credit(BigDecimal amount) {
+        requireCustomer();
+        balance = balance.add(amount);
+    }
+
+    public void debit(BigDecimal amount) {
+        requireCustomer();
+        if (!covers(amount)) {
+            throw new IllegalStateException("Balance would become negative");
+        }
+        balance = balance.subtract(amount);
+    }
+
+    public boolean covers(BigDecimal amount) {
+        return balance.compareTo(amount) >= 0;
+    }
+
+    private void requireCustomer() {
+        if (kind != WalletKind.CUSTOMER) {
+            throw new IllegalStateException("System wallets have no cached balance (L5)");
+        }
+    }
+
+    public boolean isCustomer() {
+        return kind == WalletKind.CUSTOMER;
+    }
+
     public UUID id() {
         return id;
+    }
+
+    public WalletKind kind() {
+        return kind;
+    }
+
+    public SystemPurpose purpose() {
+        return purpose;
     }
 
     public String accountNumber() {
