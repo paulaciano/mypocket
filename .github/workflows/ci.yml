@@ -31,5 +31,16 @@ jobs:
       - name: Verify (format, compile, tests)
         run: ./mvnw -B verify
 
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # The layer cache keeps Maven and the dependencies between runs, so the image build only
+      # downloads from Maven Central when a pom changes (Maven Central throttles shared runner IPs).
       - name: Build wallet-core image
-        run: docker build -f services/wallet-core/Dockerfile -t mypocket/wallet-core:ci .
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: services/wallet-core/Dockerfile
+          tags: mypocket/wallet-core:ci
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
