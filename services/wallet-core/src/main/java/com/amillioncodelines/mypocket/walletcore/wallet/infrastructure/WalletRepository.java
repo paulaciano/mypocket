@@ -16,7 +16,10 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
 
     boolean existsByAccountNumber(String accountNumber);
 
-    Optional<Wallet> findByAccountNumber(String accountNumber);
+    /** Locks the customer wallet with this account number, so its status and balance are current. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select w from Wallet w where w.accountNumber = :accountNumber")
+    Optional<Wallet> lockByAccountNumber(String accountNumber);
 
     List<Wallet> findByOwnerIdOrderByCurrency(UUID ownerId);
 

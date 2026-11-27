@@ -146,6 +146,29 @@ class LedgerTest {
     }
 
     @Test
+    @DisplayName("L3: the ledger applies movements on the current balance even if the caller read the wallet before")
+    void callerReadingFirstDoesNotLoseUpdates() throws Exception {
+        var ars = customerWallet(Currency.ARS);
+        var external = systemWallets.id(SystemPurpose.EXTERNAL, Currency.ARS);
+        List<Callable<Object>> credits = Collections.nCopies(
+                10,
+                () -> tx.execute(status -> {
+                    wallets.findById(ars.id()).orElseThrow();
+                    return ledger.move(
+                            TransactionType.CASH_IN, Money.of("10.00", Currency.ARS), null, external, ars.id());
+                }));
+
+        try (var pool = Executors.newFixedThreadPool(10)) {
+            for (var result : pool.invokeAll(credits)) {
+                result.get();
+            }
+        }
+
+        assertThat(balance(ars.id())).isEqualByComparingTo("100.00");
+        assertThat(entries.computedBalance(ars.id())).isEqualByComparingTo("100.00");
+    }
+
+    @Test
     @DisplayName("M4: money only moves between wallets of the same currency")
     void sameCurrencyOnly() {
         var ars = customerWallet(Currency.ARS);
