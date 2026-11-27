@@ -111,10 +111,10 @@ The balance of a wallet is `sum(CREDIT) − sum(DEBIT)` of its entries.
 - **L7** An operation that cannot lock its wallets within 5 seconds is rejected as temporarily unavailable and changes nothing, so the client can retry it.
 
 ### Idempotency (I)
-- **I1** Transfer and withdrawal requests require an `Idempotency-Key` header (1 to 100 characters). A missing or invalid key is rejected.
+- **I1** Transfer and withdrawal requests require an `Idempotency-Key` header (1 to 100 visible ASCII characters). A missing or invalid key is rejected.
 - **I2** Keys are scoped per user: two users may use the same key independently.
 - **I3** Repeating a request with the same key and the same body returns the original response (status and body) and moves no money.
-- **I4** Reusing a key with a different body or for a different operation is rejected.
+- **I4** Reusing a key with a different body or for a different operation is rejected. Bodies are compared by their parsed values, so formatting or field order does not make them different.
 - **I5** Two concurrent requests with the same key result in a single operation; the other one receives the original response.
 - **I6** Only successful responses are stored. A request rejected by a business rule (for example insufficient funds) can be retried with the same key and is evaluated again.
 - **I7** Idempotency records do not expire.
