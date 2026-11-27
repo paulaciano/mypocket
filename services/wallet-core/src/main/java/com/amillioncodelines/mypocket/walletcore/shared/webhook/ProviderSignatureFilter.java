@@ -13,6 +13,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -26,7 +28,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @EnableConfigurationProperties(ProviderProperties.class)
 class ProviderSignatureFilter extends OncePerRequestFilter {
 
-    static final String WEBHOOKS_PATH = "/api/v1/webhooks/";
+    // Matches paths the same way Spring Security and MVC do (decoded), so no spelling of a webhook path
+    // skips the signature check.
+    private static final RequestMatcher WEBHOOKS =
+            PathPatternRequestMatcher.withDefaults().matcher("/api/v1/webhooks/**");
     static final String TIMESTAMP_HEADER = "X-Provider-Timestamp";
     static final String SIGNATURE_HEADER = "X-Provider-Signature";
     static final int MAX_BODY_BYTES = 16 * 1024;
@@ -47,7 +52,7 @@ class ProviderSignatureFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().startsWith(WEBHOOKS_PATH);
+        return !WEBHOOKS.matches(request);
     }
 
     @Override
@@ -69,6 +74,7 @@ class ProviderSignatureFilter extends OncePerRequestFilter {
             write(response, HttpStatus.UNAUTHORIZED, INVALID_SIGNATURE);
             return;
         }
+        VerifiedWebhook.mark(request);
         chain.doFilter(new CachedBodyRequest(request, body), response);
     }
 
