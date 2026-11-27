@@ -6,6 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -30,6 +31,19 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setTitle(ex.title());
         problem.setProperty("code", ex.code());
         return problem;
+    }
+
+    /** L7: a wallet stayed locked longer than the lock timeout; nothing changed, so retrying is safe. */
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    ResponseEntity<ProblemDetail> handleLockTimeout(PessimisticLockingFailureException ex) {
+        log.warn("Lock not acquired in time: {}", ex.getClass().getSimpleName());
+        var problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.SERVICE_UNAVAILABLE, "The operation could not be processed now. Try again.");
+        problem.setTitle("Service busy");
+        problem.setProperty("code", "SERVICE_BUSY");
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .header(HttpHeaders.RETRY_AFTER, "1")
+                .body(problem);
     }
 
     @ExceptionHandler(Exception.class)

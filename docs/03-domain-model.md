@@ -93,6 +93,7 @@ The balance of a wallet is `sum(CREDIT) − sum(DEBIT)` of its entries.
 - **L4** The balance of a customer wallet is never negative.
 - **L5** System wallets have no cached balance; their balance is always computed from their entries.
 - **L6** A wallet's history lists its entries from newest to oldest, paginated, with the transaction type and, for transfers, the counterpart's account number.
+- **L7** An operation that cannot lock its wallets within 5 seconds is rejected as temporarily unavailable and changes nothing, so the client can retry it.
 
 ### Idempotency (I)
 - **I1** Transfer and withdrawal requests require an `Idempotency-Key` header (1 to 100 characters). A missing or invalid key is rejected.

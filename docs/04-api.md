@@ -37,6 +37,7 @@ development profile only, it is served at `/v3/api-docs`, with Swagger UI at `/s
 | 409 | Conflicting state: email already registered (`EMAIL_ALREADY_REGISTERED`), cash-in reference already applied with other data (`CASH_IN_REFERENCE_CONFLICT`), idempotency key reused with another body, settling an already settled withdrawal with another outcome |
 | 413 | Webhook body larger than 16 KB (`PAYLOAD_TOO_LARGE`) |
 | 422 | Business rule rejected the operation (`INSUFFICIENT_FUNDS`, `WALLET_CANNOT_SEND`, `WALLET_CANNOT_RECEIVE`, `ACCOUNT_NOT_FOUND`, `LIMIT_EXCEEDED`, `CURRENCY_MISMATCH`, …) |
+| 503 | A wallet stayed locked longer than the lock timeout (`SERVICE_BUSY`, with `Retry-After: 1`); nothing changed and the request can be retried (L7) |
 
 ## Endpoints
 
