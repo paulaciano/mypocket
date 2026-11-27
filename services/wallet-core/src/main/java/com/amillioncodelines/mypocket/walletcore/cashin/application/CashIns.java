@@ -3,6 +3,8 @@ package com.amillioncodelines.mypocket.walletcore.cashin.application;
 import com.amillioncodelines.mypocket.walletcore.ledger.application.CurrencyMismatchException;
 import com.amillioncodelines.mypocket.walletcore.ledger.application.Ledger;
 import com.amillioncodelines.mypocket.walletcore.ledger.domain.TransactionType;
+import com.amillioncodelines.mypocket.walletcore.rejection.application.RejectedOperations;
+import com.amillioncodelines.mypocket.walletcore.rejection.domain.RejectedOperation;
 import com.amillioncodelines.mypocket.walletcore.shared.api.ApiException;
 import com.amillioncodelines.mypocket.walletcore.shared.domain.Money;
 import com.amillioncodelines.mypocket.walletcore.wallet.application.AccountNotFoundException;
@@ -35,18 +37,21 @@ public class CashIns {
     private final SystemWallets systemWallets;
     private final TransactionTemplate transactions;
     private final MeterRegistry meters;
+    private final RejectedOperations rejectedOperations;
 
     CashIns(
             Ledger ledger,
             WalletRepository wallets,
             SystemWallets systemWallets,
             PlatformTransactionManager transactionManager,
-            MeterRegistry meters) {
+            MeterRegistry meters,
+            RejectedOperations rejectedOperations) {
         this.ledger = ledger;
         this.wallets = wallets;
         this.systemWallets = systemWallets;
         this.transactions = new TransactionTemplate(transactionManager);
         this.meters = meters;
+        this.rejectedOperations = rejectedOperations;
     }
 
     public record CashIn(String reference, String accountNumber, Money money) {}
@@ -64,13 +69,15 @@ public class CashIns {
         try {
             return applyOnce(cashIn);
         } catch (ApiException rejection) {
-            // CI7: the provider keeps the money, so every rejection must be traceable.
+            // CI7, R1: the provider keeps the money, so every rejection must be traceable.
             log.warn(
                     "Cash-in rejected: reason={}, reference={}, accountNumber={}",
                     rejection.code(),
                     cashIn.reference(),
                     cashIn.accountNumber());
             meters.counter(REJECTED_METRIC, "reason", rejection.code()).increment();
+            rejectedOperations.record(now -> RejectedOperation.cashIn(
+                    rejection.code(), cashIn.reference(), cashIn.accountNumber(), cashIn.money(), now));
             throw rejection;
         }
     }
