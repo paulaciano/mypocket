@@ -4,6 +4,36 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-11-27
+
+### Added
+
+- P2P transfers `POST /api/v1/transfers`: from one of the customer's wallets to another wallet's
+  account number, with an optional description, a per-operation limit per currency (ARS 1,000,000,
+  USD 5,000) and status, currency and balance checks.
+- `GET /api/v1/transfers/{transferId}`, visible to the sender and the recipient only.
+- Idempotency for money-moving customer requests: a required `Idempotency-Key` header; a repeated
+  request gets the original response with `Idempotent-Replayed: true`, and reusing a key for a
+  different request answers `409 IDEMPOTENCY_KEY_REUSED`. Keys are per user and do not expire.
+- Record of money operations rejected by a business rule (cash-ins and transfers), with their
+  reason, kept for audit.
+- A lock timeout: an operation that cannot lock its wallets within 5 seconds answers
+  `503 SERVICE_BUSY` with `Retry-After: 1` and changes nothing.
+- A glossary of domain terms in the documentation.
+
+### Changed
+
+- The error for an unknown account number is now `UNKNOWN_ACCOUNT_NUMBER` (was
+  `ACCOUNT_NOT_FOUND`), also in the cash-in webhook and in the `reason` of the
+  `mypocket.cashin.rejected` metric.
+- Validation errors of headers name the header (for example `Idempotency-Key`).
+
+### Security
+
+- Transfer descriptions reject control, formatting and line separator characters, so they cannot
+  disguise text or break log lines.
+- A wallet that cannot send learns nothing about the destination of a transfer.
+
 ## [0.2.0] - 2026-11-26
 
 ### Added
@@ -53,5 +83,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Startup refuses missing secrets or example values outside the development and test profiles.
 - Personal data stays out of logs and identifiers.
 
+[0.3.0]: https://github.com/paulaciano/mypocket/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/paulaciano/mypocket/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/paulaciano/mypocket/releases/tag/v0.1.0
