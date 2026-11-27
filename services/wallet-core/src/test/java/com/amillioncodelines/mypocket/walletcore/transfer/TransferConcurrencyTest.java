@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -122,14 +123,37 @@ class TransferConcurrencyTest {
         var ana = customer();
         var bruno = customer();
         var key = "key-" + UUID.randomUUID();
-        var requests = new ArrayList<Callable<Integer>>();
+        var token = loginService.login(ana.email(), "secret-pass").value();
+        var requests = new ArrayList<Callable<MockHttpServletResponse>>();
         for (int i = 0; i < 20; i++) {
-            requests.add(() -> transfer(ana, bruno, "10.00", key));
+            requests.add(() -> mockMvc.perform(post("/api/v1/transfers")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                            .header("Idempotency-Key", key)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {"sourceWalletId": "%s", "destinationAccountNumber": "%s", "amount": "10.00"}
+                                    """.formatted(
+                                            ana.wallet().id(), bruno.wallet().accountNumber())))
+                    .andReturn()
+                    .getResponse());
         }
 
-        var statuses = runConcurrently(requests);
+        var responses = new ArrayList<MockHttpServletResponse>();
+        try (var pool = Executors.newFixedThreadPool(20)) {
+            for (var result : pool.invokeAll(requests)) {
+                responses.add(result.get());
+            }
+        }
 
-        assertThat(statuses).containsOnly(201);
+        assertThat(responses).extracting(MockHttpServletResponse::getStatus).containsOnly(201);
+        var bodies = new ArrayList<String>();
+        for (var response : responses) {
+            bodies.add(response.getContentAsString());
+        }
+        assertThat(bodies).containsOnly(bodies.getFirst());
+        assertThat(responses)
+                .filteredOn(r -> r.getHeader("Idempotent-Replayed") == null)
+                .hasSize(1);
         assertThat(balance(ana)).isEqualByComparingTo("990.00");
         assertThat(balance(bruno)).isEqualByComparingTo("1010.00");
     }

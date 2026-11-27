@@ -124,19 +124,19 @@ The balance of a wallet is `sum(CREDIT) − sum(DEBIT)` of its entries.
 - **CI2** A cash-in is identified by the provider's reference (1 to 100 letters, digits or `.`, `_`, `:`, `-`). The same reference is applied only once; repeating it, even concurrently, returns the original result.
 - **CI3** The same provider reference with different data (account number, amount or currency) is rejected.
 - **CI4** The currency of the cash-in must match the wallet's currency.
-- **CI5** A cash-in to a wallet that cannot receive money (W3) is rejected, and the provider keeps the money. A rejected cash-in is not recorded: if the provider retries it, it is evaluated again.
+- **CI5** A cash-in to a wallet that cannot receive money (W3) is rejected, and the provider keeps the money. A rejected cash-in is not applied and does not reserve its reference: if the provider retries it, it is evaluated again.
 - **CI6** Cash-ins have no business amount limit; only the format limits of M1 apply.
 - **CI7** Every cash-in with a valid signature that a business rule rejects (unknown account, reference conflict, currency mismatch, wallet that cannot receive) is logged with the provider reference, the account number and the reason, and counted in the `mypocket.cashin.rejected` metric by reason. Requests with an invalid signature are logged without their content, since it cannot be trusted (S5).
 
 ### Transfers (T)
 - **T1** The sender chooses one of their wallets and the destination wallet's account number. An unknown account number is rejected.
 - **T2** Source and destination must be different wallets, and of the same currency (M4). Transfers between two wallets of the same customer are therefore impossible (W1).
-- **T3** The source wallet must be able to send and the destination wallet must be able to receive (W3).
+- **T3** The source wallet must be able to send and the destination wallet must be able to receive (W3). A wallet that cannot send is rejected before anything about the destination is checked.
 - **T4** The sender's balance must cover the amount.
 - **T5** The amount cannot exceed the per-operation limit of the currency.
 - **T6** A transfer is atomic: both balances change together or neither changes.
 - **T7** Concurrent transfers, including opposite transfers between the same two wallets, never deadlock and never lose or create money.
-- **T8** A transfer has an optional description of up to 140 characters, without control characters. Both sides see it; it is never logged or recorded with rejected operations.
+- **T8** A transfer has an optional description of up to 140 characters, without control, formatting (such as text direction overrides) or line separator characters. Both sides see it; it is never logged or recorded with rejected operations.
 
 ### Cash-out (CO)
 - **CO1** The customer chooses one of their wallets, an amount and a destination (an external account identifier, 1 to 100 characters).

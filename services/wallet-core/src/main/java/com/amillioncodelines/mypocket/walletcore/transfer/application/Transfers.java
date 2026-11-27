@@ -71,16 +71,16 @@ public class Transfers {
                     userId,
                     command.sourceWalletId(),
                     command.destinationAccountNumber());
-            var currency = wallets.findByIdAndOwnerId(command.sourceWalletId(), userId)
-                    .map(w -> w.currency())
-                    .orElse(null);
+            // The currency lookup runs inside record(), so its failure cannot replace the rejection (R1).
             rejectedOperations.record(now -> RejectedOperation.transfer(
                     rejection.code(),
                     userId,
                     command.sourceWalletId(),
                     command.destinationAccountNumber(),
                     command.amount(),
-                    currency,
+                    wallets.findByIdAndOwnerId(command.sourceWalletId(), userId)
+                            .map(wallet -> wallet.currency())
+                            .orElse(null),
                     now));
             throw rejection;
         }
@@ -88,9 +88,14 @@ public class Transfers {
 
     /** Runs inside the idempotency transaction, so a rejection leaves nothing behind (T6, I6). */
     private TransferView transfer(UUID userId, Command command) {
-        var sourceId = wallets.findByIdAndOwnerId(command.sourceWalletId(), userId)
-                .orElseThrow(WalletNotFoundException::new)
-                .id();
+        var requestedSource =
+                wallets.findByIdAndOwnerId(command.sourceWalletId(), userId).orElseThrow(WalletNotFoundException::new);
+        // Checked before looking at the destination, so a wallet that cannot send learns nothing about it.
+        // Checked again below on the locked wallet, whose status is current.
+        if (!requestedSource.status().canSend()) {
+            throw new WalletCannotSendException();
+        }
+        var sourceId = requestedSource.id();
         var destinationId = wallets.findIdByAccountNumber(command.destinationAccountNumber())
                 .orElseThrow(UnknownAccountNumberException::new);
         if (sourceId.equals(destinationId)) {
@@ -99,11 +104,11 @@ public class Transfers {
         var locked = ledger.lockCustomerWallets(sourceId, destinationId);
         var source = locked.get(sourceId);
         var destination = locked.get(destinationId);
-        if (source.currency() != destination.currency()) {
-            throw new CurrencyMismatchException();
-        }
         if (!source.status().canSend()) {
             throw new WalletCannotSendException();
+        }
+        if (source.currency() != destination.currency()) {
+            throw new CurrencyMismatchException();
         }
         if (!destination.status().canReceive()) {
             throw new WalletCannotReceiveException();
