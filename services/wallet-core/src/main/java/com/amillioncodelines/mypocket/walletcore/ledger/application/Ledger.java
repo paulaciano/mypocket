@@ -14,6 +14,7 @@ import java.time.Clock;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -52,15 +53,21 @@ public class Ledger {
     @Transactional(propagation = Propagation.MANDATORY)
     public LedgerTransaction move(
             TransactionType type, Money money, String externalReference, UUID fromWalletId, UUID toWalletId) {
+        return move(type, money, externalReference, null, fromWalletId, toWalletId);
+    }
+
+    @Transactional(propagation = Propagation.MANDATORY)
+    public LedgerTransaction move(
+            TransactionType type,
+            Money money,
+            String externalReference,
+            String description,
+            UUID fromWalletId,
+            UUID toWalletId) {
         if (fromWalletId.equals(toWalletId)) {
             throw new IllegalArgumentException("Source and destination must be different wallets");
         }
-        var involved = new HashMap<UUID, Wallet>();
-        for (var wallet : wallets.lockCustomerWallets(List.of(fromWalletId, toWalletId))) {
-            // The lock query hands back a wallet the caller may have loaded earlier, with a stale balance.
-            entityManager.refresh(wallet);
-            involved.put(wallet.id(), wallet);
-        }
+        var involved = lockCustomerWallets(fromWalletId, toWalletId);
         var from = involved.computeIfAbsent(fromWalletId, this::existing);
         var to = involved.computeIfAbsent(toWalletId, this::existing);
 
@@ -79,10 +86,27 @@ public class Ledger {
 
         // PostgreSQL keeps microseconds: the result returned now must equal the one read back later (CI2).
         var now = clock.instant().truncatedTo(ChronoUnit.MICROS);
-        var transaction = transactions.saveAndFlush(new LedgerTransaction(type, money, externalReference, now));
+        var transaction =
+                transactions.saveAndFlush(new LedgerTransaction(type, money, externalReference, description, now));
         entries.save(new LedgerEntry(transaction.id(), from.id(), EntryDirection.DEBIT, money.amount(), now));
         entries.save(new LedgerEntry(transaction.id(), to.id(), EntryDirection.CREDIT, money.amount(), now));
         return transaction;
+    }
+
+    /**
+     * Locks the customer wallets among {@code walletIds} in ascending id order (ADR-0004) and returns them with
+     * their current state, so callers can check status and balance before moving money. System wallets are not
+     * locked and not returned.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Map<UUID, Wallet> lockCustomerWallets(UUID... walletIds) {
+        var locked = new HashMap<UUID, Wallet>();
+        for (var wallet : wallets.lockCustomerWallets(List.of(walletIds))) {
+            // The lock query hands back a wallet the caller may have loaded earlier, with a stale balance.
+            entityManager.refresh(wallet);
+            locked.put(wallet.id(), wallet);
+        }
+        return locked;
     }
 
     /** A transaction already posted with this external reference, with the wallet it credited. */
@@ -90,17 +114,29 @@ public class Ledger {
     public Optional<Posted> findByReference(TransactionType type, String externalReference) {
         return transactions
                 .findByTypeAndExternalReference(type, externalReference)
-                .map(transaction -> {
-                    var credited = entries.findByTransactionId(transaction.id()).stream()
-                            .filter(entry -> entry.direction() == EntryDirection.CREDIT)
-                            .findFirst()
-                            .orElseThrow()
-                            .walletId();
-                    return new Posted(transaction, credited);
-                });
+                .map(this::posted);
     }
 
-    public record Posted(LedgerTransaction transaction, UUID creditedWalletId) {}
+    @Transactional(readOnly = true)
+    public Optional<Posted> find(TransactionType type, UUID transactionId) {
+        return transactions.findByIdAndType(transactionId, type).map(this::posted);
+    }
+
+    /** A posted transaction with the wallets it moved money between. */
+    public record Posted(LedgerTransaction transaction, UUID debitedWalletId, UUID creditedWalletId) {}
+
+    private Posted posted(LedgerTransaction transaction) {
+        UUID debited = null;
+        UUID credited = null;
+        for (var entry : entries.findByTransactionId(transaction.id())) {
+            if (entry.direction() == EntryDirection.DEBIT) {
+                debited = entry.walletId();
+            } else {
+                credited = entry.walletId();
+            }
+        }
+        return new Posted(transaction, debited, credited);
+    }
 
     private Wallet existing(UUID walletId) {
         return wallets.findById(walletId).orElseThrow(() -> new IllegalArgumentException("Unknown wallet " + walletId));

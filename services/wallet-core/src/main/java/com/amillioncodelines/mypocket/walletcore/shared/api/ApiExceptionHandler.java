@@ -6,6 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.core.MethodParameter;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,8 +14,10 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
@@ -79,10 +82,13 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         List<Map<String, String>> errors = ex.getParameterValidationResults().stream()
                 .flatMap(result -> result.getResolvableErrors().stream()
                         .map(error -> Map.of(
+                                // A request body reports its own fields; a header or parameter, its name.
                                 "field",
-                                        String.valueOf(
-                                                result.getMethodParameter().getParameterName()),
-                                "message", String.valueOf(error.getDefaultMessage()))))
+                                error instanceof FieldError fieldError
+                                        ? fieldError.getField()
+                                        : fieldName(result.getMethodParameter()),
+                                "message",
+                                String.valueOf(error.getDefaultMessage()))))
                 .sorted(Comparator.comparing(error -> error.get("field")))
                 .toList();
         problem.setProperty("errors", errors);
@@ -117,6 +123,15 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             problem.setProperty("code", defaultCode(statusCode));
         }
         return super.createResponseEntity(body, headers, statusCode, request);
+    }
+
+    /** Headers are reported by their HTTP name (for example {@code Idempotency-Key}). */
+    private static String fieldName(MethodParameter parameter) {
+        var header = parameter.getParameterAnnotation(RequestHeader.class);
+        if (header != null && !header.name().isEmpty()) {
+            return header.name();
+        }
+        return String.valueOf(parameter.getParameterName());
     }
 
     private static String defaultCode(HttpStatusCode status) {

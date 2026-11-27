@@ -45,6 +45,11 @@ management:
         enabled: true
 
 mypocket:
+  limits:
+    # T5: maximum amount of one transfer or withdrawal.
+    per-operation:
+      ARS: 1000000.00
+      USD: 5000.00
   admin:
     email: ${MYPOCKET_ADMIN_EMAIL:}
     password: ${MYPOCKET_ADMIN_PASSWORD:}

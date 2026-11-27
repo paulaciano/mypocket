@@ -13,4 +13,6 @@ public interface LedgerTransactionRepository extends Repository<LedgerTransactio
     LedgerTransaction saveAndFlush(LedgerTransaction transaction);
 
     Optional<LedgerTransaction> findByTypeAndExternalReference(TransactionType type, String externalReference);
+
+    Optional<LedgerTransaction> findByIdAndType(UUID id, TransactionType type);
 }

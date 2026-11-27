@@ -33,7 +33,7 @@ erDiagram
 |---|---|
 | **User** | id, email (unique, case-insensitive), password hash, role (`CUSTOMER`, `ADMIN`), created at |
 | **Wallet** | id, account number (customer wallets), owner (user, or none for system wallets), kind (`CUSTOMER`, `SYSTEM`), system purpose, currency, status, status reason, balance, created at |
-| **Transaction** | id, type (`CASH_IN`, `TRANSFER`, `WITHDRAWAL`, `WITHDRAWAL_SETTLEMENT`, `WITHDRAWAL_REVERSAL`), currency, amount, external reference, created at |
+| **Transaction** | id, type (`CASH_IN`, `TRANSFER`, `WITHDRAWAL`, `WITHDRAWAL_SETTLEMENT`, `WITHDRAWAL_REVERSAL`), currency, amount, external reference, description (transfers), created at |
 | **LedgerEntry** | id, transaction, wallet, direction (`DEBIT`, `CREDIT`), amount, created at |
 | **Withdrawal** | id, wallet, amount, destination (free-text external account), status (`PENDING`, `COMPLETED`, `FAILED`), provider reference, created at, settled at |
 | **IdempotencyRecord** | user, key, request fingerprint, response status, response body, created at |
@@ -136,7 +136,7 @@ The balance of a wallet is `sum(CREDIT) − sum(DEBIT)` of its entries.
 - **T5** The amount cannot exceed the per-operation limit of the currency.
 - **T6** A transfer is atomic: both balances change together or neither changes.
 - **T7** Concurrent transfers, including opposite transfers between the same two wallets, never deadlock and never lose or create money.
-- **T8** A transfer has an optional description of up to 140 characters.
+- **T8** A transfer has an optional description of up to 140 characters, without control characters. Both sides see it; it is never logged or recorded with rejected operations.
 
 ### Cash-out (CO)
 - **CO1** The customer chooses one of their wallets, an amount and a destination (an external account identifier, 1 to 100 characters).

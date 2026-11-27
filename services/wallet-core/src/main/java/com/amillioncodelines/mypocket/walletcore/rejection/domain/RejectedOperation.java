@@ -45,8 +45,8 @@ public class RejectedOperation {
     @Column(name = "destination_account_number")
     private String destinationAccountNumber;
 
+    /** Unknown when the operation named a wallet that does not exist. */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Currency currency;
 
     @Column(nullable = false)
@@ -64,7 +64,8 @@ public class RejectedOperation {
             String providerReference,
             UUID sourceWalletId,
             String destinationAccountNumber,
-            Money money,
+            BigDecimal amount,
+            Currency currency,
             Instant createdAt) {
         this.type = type;
         this.reason = reason;
@@ -72,15 +73,23 @@ public class RejectedOperation {
         this.providerReference = providerReference;
         this.sourceWalletId = sourceWalletId;
         this.destinationAccountNumber = destinationAccountNumber;
-        this.currency = money.currency();
-        this.amount = money.amount();
+        this.currency = currency;
+        this.amount = amount;
         this.createdAt = createdAt;
     }
 
     public static RejectedOperation cashIn(
             String reason, String providerReference, String accountNumber, Money money, Instant now) {
         return new RejectedOperation(
-                OperationType.CASH_IN, reason, null, providerReference, null, accountNumber, money, now);
+                OperationType.CASH_IN,
+                reason,
+                null,
+                providerReference,
+                null,
+                accountNumber,
+                money.amount(),
+                money.currency(),
+                now);
     }
 
     public static RejectedOperation transfer(
@@ -88,10 +97,19 @@ public class RejectedOperation {
             UUID userId,
             UUID sourceWalletId,
             String destinationAccountNumber,
-            Money money,
+            BigDecimal amount,
+            Currency currency,
             Instant now) {
         return new RejectedOperation(
-                OperationType.TRANSFER, reason, userId, null, sourceWalletId, destinationAccountNumber, money, now);
+                OperationType.TRANSFER,
+                reason,
+                userId,
+                null,
+                sourceWalletId,
+                destinationAccountNumber,
+                amount,
+                currency,
+                now);
     }
 
     public UUID id() {
@@ -122,8 +140,12 @@ public class RejectedOperation {
         return destinationAccountNumber;
     }
 
-    public Money money() {
-        return new Money(amount, currency);
+    public BigDecimal amount() {
+        return amount;
+    }
+
+    public Currency currency() {
+        return currency;
     }
 
     public Instant createdAt() {
