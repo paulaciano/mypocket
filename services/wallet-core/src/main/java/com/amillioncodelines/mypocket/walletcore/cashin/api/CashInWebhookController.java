@@ -2,9 +2,11 @@ package com.amillioncodelines.mypocket.walletcore.cashin.api;
 
 import com.amillioncodelines.mypocket.walletcore.cashin.application.CashIns;
 import com.amillioncodelines.mypocket.walletcore.shared.domain.Money;
+import com.amillioncodelines.mypocket.walletcore.shared.webhook.VerifiedWebhook;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import org.springframework.http.HttpStatus;
@@ -33,7 +35,8 @@ class CashInWebhookController {
             in = ParameterIn.HEADER,
             required = true,
             description = "sha256= + hex HMAC-SHA256 of timestamp + \".\" + raw body")
-    ResponseEntity<CashInResponse> receive(@Valid @RequestBody CashInRequest request) {
+    ResponseEntity<CashInResponse> receive(@Valid @RequestBody CashInRequest request, HttpServletRequest http) {
+        VerifiedWebhook.require(http);
         var result = cashIns.receive(new CashIns.CashIn(
                 request.reference(),
                 request.accountNumber(),
