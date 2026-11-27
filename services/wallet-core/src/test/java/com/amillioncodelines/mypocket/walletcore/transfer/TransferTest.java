@@ -1,6 +1,7 @@
 package com.amillioncodelines.mypocket.walletcore.transfer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -25,6 +26,9 @@ import com.amillioncodelines.mypocket.walletcore.wallet.infrastructure.WalletRep
 import com.jayway.jsonpath.JsonPath;
 import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -213,6 +217,106 @@ class TransferTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0].field").value("description"));
         send(ana, newKey(), ars(ana).id(), destination, "1.00", "line\\nbreak").andExpect(status().isBadRequest());
+        // Unicode next line, right-to-left override and line separator: invisible tricks for the recipient.
+        for (var tricky : new String[] {"a\\u0085b", "pay \\u202Eevil", "a\\u2028b"}) {
+            send(ana, newKey(), ars(ana).id(), destination, "1.00", tricky)
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors[0].field").value("description"));
+        }
+        send(ana, newKey(), ars(ana).id(), destination, "1.00", "Cena con Ñandú 🍕")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.description").value("Cena con Ñandú 🍕"));
+    }
+
+    @Test
+    @DisplayName("T3: a wallet that cannot send learns nothing about the destination")
+    void blockedSenderLearnsNothing() throws Exception {
+        var ana = register();
+        var bruno = register();
+        fund(ars(ana), "10.00");
+        setStatus(ars(ana), "DEBIT_BLOCKED");
+        setStatus(ars(bruno), "FROZEN");
+
+        for (var destination : new String[] {
+            "1000000009", ars(bruno).accountNumber(), usd(bruno).accountNumber()
+        }) {
+            send(ana, newKey(), ars(ana).id(), destination, "1.00", null)
+                    .andExpect(status().isUnprocessableContent())
+                    .andExpect(jsonPath("$.code").value("WALLET_CANNOT_SEND"));
+        }
+    }
+
+    @Test
+    @DisplayName("T6: if anything fails after the debit, neither balance changes")
+    void atomicWhenFailingAfterDebit() {
+        var ana = register();
+        var bruno = register();
+        fund(ars(ana), "10.00");
+
+        assertThatThrownBy(() -> tx.executeWithoutResult(status -> {
+                    ledger.move(
+                            TransactionType.TRANSFER,
+                            Money.of("4.00", Currency.ARS),
+                            null,
+                            null,
+                            ars(ana).id(),
+                            ars(bruno).id());
+                    throw new IllegalStateException("failure after the money moved");
+                }))
+                .hasMessage("failure after the money moved");
+
+        assertThat(balance(ars(ana))).isEqualByComparingTo("10.00");
+        assertThat(balance(ars(bruno))).isEqualByComparingTo("0.00");
+    }
+
+    @Test
+    @DisplayName(
+            "L7: a transfer whose wallets stay locked answers 503, leaves no trace and can be retried with the same key")
+    void lockTimeout() throws Exception {
+        var ana = register();
+        var bruno = register();
+        fund(ars(ana), "10.00");
+        var key = newKey();
+        var locked = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+
+        try (var pool = Executors.newSingleThreadExecutor()) {
+            var holder = pool.submit(() -> tx.executeWithoutResult(status -> {
+                jdbc.queryForList(
+                        "select id from wallets where id = ? for update",
+                        ars(bruno).id());
+                locked.countDown();
+                awaitQuietly(release);
+            }));
+            assertThat(locked.await(10, TimeUnit.SECONDS)).isTrue();
+
+            send(ana, key, ars(ana).id(), ars(bruno).accountNumber(), "4.00", null)
+                    .andExpect(status().isServiceUnavailable())
+                    .andExpect(header().string("Retry-After", "1"))
+                    .andExpect(jsonPath("$.code").value("SERVICE_BUSY"));
+
+            release.countDown();
+            holder.get(10, TimeUnit.SECONDS);
+        }
+
+        assertThat(balance(ars(ana))).isEqualByComparingTo("10.00");
+        assertThat(jdbc.queryForObject(
+                        "select count(*) from idempotency_records where user_id = ?",
+                        Long.class,
+                        ana.user().id()))
+                .isZero();
+        assertThat(rejected.findByUserId(ana.user().id())).isEmpty();
+        send(ana, key, ars(ana).id(), ars(bruno).accountNumber(), "4.00", null)
+                .andExpect(status().isCreated())
+                .andExpect(header().doesNotExist("Idempotent-Replayed"));
+    }
+
+    private static void awaitQuietly(CountDownLatch latch) {
+        try {
+            latch.await(30, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Test

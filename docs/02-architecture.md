@@ -87,8 +87,9 @@ com.amillioncodelines.mypocket.walletcore
 - `domain` — entities with behavior and the business rules ([Domain model](03-domain-model.md)).
 - `infrastructure` — repositories, Kafka, webhook signature verification.
 
-Features call each other only through application services, never through another feature's
-repositories. Only the `ledger` feature writes ledger entries and balances.
+Each feature owns its data. Other features may read and lock it through its repositories, but
+only the owner changes it: only `wallet` creates wallets and changes their status, and only `ledger`
+writes ledger entries and balances.
 
 ## Money movement flow (P2P transfer)
 

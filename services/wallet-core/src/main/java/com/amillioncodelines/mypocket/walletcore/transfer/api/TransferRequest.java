@@ -13,6 +13,10 @@ record TransferRequest(
         String destinationAccountNumber,
 
         @NotNull @AcceptableAmount String amount,
-        // T8: shown to both sides; no control characters, so it cannot break a log line or a client view.
-        @Size(max = 140) @Pattern(regexp = "[^\\p{Cntrl}]*", message = "must not contain control characters")
+        // T8: shown to both sides. No Unicode control, format (bidi overrides) or line/paragraph separator
+        // characters, so it cannot break a log line or disguise text in a client view.
+        @Size(max = 140)
+        @Pattern(
+                regexp = "[^\\p{Cc}\\p{Cf}\\p{Zl}\\p{Zp}]*",
+                message = "must not contain control or formatting characters")
         String description) {}
