@@ -7,7 +7,10 @@ import java.util.Objects;
 public record Money(BigDecimal amount, Currency currency) {
 
     public static final int SCALE = 2;
-    /** Keeps any amount, and the balances built from it, far below the NUMERIC(19,2) column capacity. */
+    /**
+     * Keeps every amount within the NUMERIC(19,2) columns. A balance can still outgrow them after about 10,000
+     * maximum-size cash-ins to one wallet (accepted limitation, see docs/05-security.md).
+     */
     public static final int MAX_INTEGER_DIGITS = 13;
 
     public Money {

@@ -66,3 +66,6 @@
 - No token revocation before expiry (mitigated by the 15-minute lifetime).
 - Restricting a wallet does not invalidate its owner's token; it blocks money movement (W3), not login.
 - Account numbers can be probed by attempting transfers; they reveal no personal data (P2).
+- A wallet balance cannot exceed the 17 integer digits of its database column. Reaching it takes about
+  10,000 cash-ins of the maximum amount to one wallet; the operation would then fail with an internal
+  error instead of a business rejection.

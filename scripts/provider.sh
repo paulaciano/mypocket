@@ -5,14 +5,22 @@
 #
 # Environment:
 #   MYPOCKET_URL                      wallet-core base URL (default http://localhost:8080)
-#   MYPOCKET_PROVIDER_WEBHOOK_SECRET  shared secret (default: the development example value)
+#   MYPOCKET_PROVIDER_WEBHOOK_SECRET  shared secret (default: the development example value, with a warning)
+#
+# Exits 0 when the webhook is accepted (2xx), 1 when it is rejected, 2 on invalid arguments, and with
+# curl's exit code when wallet-core cannot be reached.
 set -euo pipefail
 
 base_url="${MYPOCKET_URL:-http://localhost:8080}"
-secret="${MYPOCKET_PROVIDER_WEBHOOK_SECRET:-dev-example-provider-webhook-secret-32-bytes}"
+if [[ -n "${MYPOCKET_PROVIDER_WEBHOOK_SECRET:-}" ]]; then
+    secret="$MYPOCKET_PROVIDER_WEBHOOK_SECRET"
+else
+    secret="dev-example-provider-webhook-secret-32-bytes"
+    echo "provider.sh: MYPOCKET_PROVIDER_WEBHOOK_SECRET not set, using the development example secret" >&2
+fi
 
 usage() {
-    sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
     exit 2
 }
 
@@ -21,20 +29,25 @@ fail() {
     exit 2
 }
 
-# HMAC-SHA256 of "timestamp.body", hex encoded.
+# HMAC-SHA256 of "timestamp.body", hex encoded. The key is an openssl argument, visible to local users in
+# the process list: acceptable for a development tool.
 sign() {
     printf '%s.%s' "$1" "$2" | openssl dgst -sha256 -hmac "$secret" | awk '{print $NF}'
 }
 
+# Prints the response and the HTTP status; exits 1 when wallet-core rejects the webhook.
 send() {
-    local path="$1" body="$2" timestamp
+    local path="$1" body="$2" timestamp response status
     timestamp="$(date +%s)"
-    curl -sS -X POST "$base_url$path" \
+    response="$(curl -sS -X POST "$base_url$path" \
         -H 'Content-Type: application/json' \
         -H "X-Provider-Timestamp: $timestamp" \
         -H "X-Provider-Signature: sha256=$(sign "$timestamp" "$body")" \
         --data-raw "$body" \
-        -w '\nHTTP %{http_code}\n'
+        -w '\nHTTP %{http_code}')"
+    echo "$response"
+    status="${response##*HTTP }"
+    [[ "$status" =~ ^2 ]] || exit 1
 }
 
 cash_in() {
