@@ -3,13 +3,13 @@ package com.amillioncodelines.mypocket.walletcore.wallet.application;
 import com.amillioncodelines.mypocket.walletcore.shared.api.ApiException;
 import org.springframework.http.HttpStatus;
 
-public class AccountNotFoundException extends ApiException {
+public class UnknownAccountNumberException extends ApiException {
 
-    public AccountNotFoundException() {
+    public UnknownAccountNumberException() {
         super(
                 HttpStatus.UNPROCESSABLE_CONTENT,
-                "ACCOUNT_NOT_FOUND",
-                "Account not found",
+                "UNKNOWN_ACCOUNT_NUMBER",
+                "Unknown account number",
                 "No wallet has this account number.");
     }
 }

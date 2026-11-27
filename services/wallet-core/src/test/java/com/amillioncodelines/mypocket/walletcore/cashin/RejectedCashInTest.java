@@ -79,7 +79,7 @@ class RejectedCashInTest {
                 .andExpect(status().isConflict());
 
         assertThat(rejected.findByProviderReference(unknown).getFirst().reason())
-                .isEqualTo("ACCOUNT_NOT_FOUND");
+                .isEqualTo("UNKNOWN_ACCOUNT_NUMBER");
         assertThat(rejected.findByProviderReference(cannotReceive).getFirst().reason())
                 .isEqualTo("WALLET_CANNOT_RECEIVE");
         assertThat(rejected.findByProviderReference(conflict)).singleElement().satisfies(record -> {

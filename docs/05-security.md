@@ -61,8 +61,8 @@
 ## Known limitations (accepted)
 
 - No rate limiting on login.
-- Registration answers `409` when the email is already registered, which reveals that the email has
-  an account. Avoiding it would require confirming registrations by email, which is out of scope.
+- Registration answers `409` when the email is already registered, which reveals that the email is
+  registered. Avoiding it would require confirming registrations by email, which is out of scope.
 - No token revocation before expiry (mitigated by the 15-minute lifetime).
 - Restricting a wallet does not invalidate its owner's token; it blocks money movement (W3), not login.
 - Account numbers can be probed by attempting transfers; they reveal no personal data (P2).

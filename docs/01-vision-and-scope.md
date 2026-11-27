@@ -2,8 +2,8 @@
 
 ## Vision
 
-MyPocket is the backend core of a digital wallet. It lets people hold money in a platform account,
-fund it from outside, send it instantly to other users and withdraw it back to an external account.
+MyPocket is the backend core of a digital wallet. It lets people hold money in wallets, one per currency,
+fund them from outside, send money instantly to other users and withdraw it back to an external account.
 Every movement of money is recorded as an immutable, balanced accounting entry.
 
 The product is API-only (REST plus domain events). There is no user interface.
