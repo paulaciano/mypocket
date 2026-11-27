@@ -5,7 +5,7 @@
 
     <groupId>com.amillioncodelines</groupId>
     <artifactId>mypocket</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <packaging>pom</packaging>
     <name>MyPocket</name>
     <description>Build aggregator for the MyPocket services. Holds no shared code or configuration.</description>
