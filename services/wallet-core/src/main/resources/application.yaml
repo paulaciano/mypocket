@@ -12,6 +12,8 @@ spring:
       data-source-properties:
         # PostgreSQL error details quote the offending values (e.g. a duplicate email); keep them out of logs (P1).
         logServerErrorDetail: false
+        # L7, ADR-0004: waiting for a row lock fails after 5 s instead of piling up requests.
+        options: "-c lock_timeout=5s"
   jpa:
     open-in-view: false
     hibernate:
