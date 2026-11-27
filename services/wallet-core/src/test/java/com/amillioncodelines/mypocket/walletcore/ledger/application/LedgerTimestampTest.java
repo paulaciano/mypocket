@@ -11,6 +11,7 @@ import com.amillioncodelines.mypocket.walletcore.user.application.RegistrationSe
 import com.amillioncodelines.mypocket.walletcore.wallet.application.SystemWallets;
 import com.amillioncodelines.mypocket.walletcore.wallet.domain.SystemPurpose;
 import com.amillioncodelines.mypocket.walletcore.wallet.infrastructure.WalletRepository;
+import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -36,6 +37,9 @@ class LedgerTimestampTest {
     SystemWallets systemWallets;
 
     @Autowired
+    EntityManager entityManager;
+
+    @Autowired
     RegistrationService registrationService;
 
     @Autowired
@@ -45,7 +49,7 @@ class LedgerTimestampTest {
     @DisplayName("CI2: a posted transaction has the same timestamp when it is read back (clocks with nanoseconds)")
     void timestampSurvivesStorage() {
         var clock = Clock.fixed(Instant.parse("2026-11-26T12:00:00.123456789Z"), ZoneOffset.UTC);
-        var ledger = new Ledger(wallets, transactions, entries, clock);
+        var ledger = new Ledger(wallets, transactions, entries, entityManager, clock);
         var wallet = registrationService
                 .registerCustomer("timestamp-" + UUID.randomUUID() + "@example.com", "secret-pass")
                 .wallets()

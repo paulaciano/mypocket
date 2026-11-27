@@ -92,7 +92,8 @@ public class CashIns {
         if (previous.isPresent()) {
             return previous.get();
         }
-        var wallet = wallets.findByAccountNumber(cashIn.accountNumber()).orElseThrow(AccountNotFoundException::new);
+        // Locked from the first read: concurrent cash-ins to this wallet wait their turn and see its current state.
+        var wallet = wallets.lockByAccountNumber(cashIn.accountNumber()).orElseThrow(AccountNotFoundException::new);
         if (wallet.currency() != cashIn.money().currency()) {
             throw new CurrencyMismatchException();
         }

@@ -9,6 +9,7 @@ import com.amillioncodelines.mypocket.walletcore.ledger.infrastructure.LedgerTra
 import com.amillioncodelines.mypocket.walletcore.shared.domain.Money;
 import com.amillioncodelines.mypocket.walletcore.wallet.domain.Wallet;
 import com.amillioncodelines.mypocket.walletcore.wallet.infrastructure.WalletRepository;
+import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -26,16 +27,19 @@ public class Ledger {
     private final WalletRepository wallets;
     private final LedgerTransactionRepository transactions;
     private final LedgerEntryRepository entries;
+    private final EntityManager entityManager;
     private final Clock clock;
 
     Ledger(
             WalletRepository wallets,
             LedgerTransactionRepository transactions,
             LedgerEntryRepository entries,
+            EntityManager entityManager,
             Clock clock) {
         this.wallets = wallets;
         this.transactions = transactions;
         this.entries = entries;
+        this.entityManager = entityManager;
         this.clock = clock;
     }
 
@@ -52,7 +56,11 @@ public class Ledger {
             throw new IllegalArgumentException("Source and destination must be different wallets");
         }
         var involved = new HashMap<UUID, Wallet>();
-        wallets.lockCustomerWallets(List.of(fromWalletId, toWalletId)).forEach(w -> involved.put(w.id(), w));
+        for (var wallet : wallets.lockCustomerWallets(List.of(fromWalletId, toWalletId))) {
+            // The lock query hands back a wallet the caller may have loaded earlier, with a stale balance.
+            entityManager.refresh(wallet);
+            involved.put(wallet.id(), wallet);
+        }
         var from = involved.computeIfAbsent(fromWalletId, this::existing);
         var to = involved.computeIfAbsent(toWalletId, this::existing);
 
