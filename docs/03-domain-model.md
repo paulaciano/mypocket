@@ -110,7 +110,7 @@ The balance of a wallet is `sum(CREDIT) − sum(DEBIT)` of its entries.
 - **CI4** The currency of the cash-in must match the wallet's currency.
 - **CI5** A cash-in to a wallet that cannot receive money (W3) is rejected, and the provider keeps the money. A rejected cash-in is not recorded: if the provider retries it, it is evaluated again.
 - **CI6** Cash-ins have no business amount limit; only the format limits of M1 apply.
-- **CI7** Every rejected cash-in is logged with the provider reference, the account number and the reason, and counted in the `mypocket.cashin.rejected` metric by reason.
+- **CI7** Every cash-in with a valid signature that a business rule rejects (unknown account, reference conflict, currency mismatch, wallet that cannot receive) is logged with the provider reference, the account number and the reason, and counted in the `mypocket.cashin.rejected` metric by reason. Requests with an invalid signature are logged without their content, since it cannot be trusted (S5).
 
 ### Transfers (T)
 - **T1** The sender chooses one of their wallets and the destination wallet's account number. An unknown account number is rejected.
