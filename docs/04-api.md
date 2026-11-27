@@ -34,7 +34,7 @@ development profile only, it is served at `/v3/api-docs`, with Swagger UI at `/s
 | 401 | Missing or invalid token (`UNAUTHORIZED`), wrong login credentials (`INVALID_CREDENTIALS`), missing, invalid or expired webhook signature (`INVALID_SIGNATURE`) |
 | 403 | Authenticated but not allowed for the role: a customer calling an admin endpoint or an administrator calling a customer endpoint (`FORBIDDEN`) |
 | 404 | Resource does not exist or belongs to someone else (W10), for example `WALLET_NOT_FOUND` |
-| 409 | Conflicting state: email already registered (`EMAIL_ALREADY_REGISTERED`), cash-in reference already applied with other data (`CASH_IN_REFERENCE_CONFLICT`), idempotency key reused with another body, settling an already settled withdrawal with another outcome |
+| 409 | Conflicting state: email already registered (`EMAIL_ALREADY_REGISTERED`), cash-in reference already applied with other data (`CASH_IN_REFERENCE_CONFLICT`), idempotency key reused with another body or operation (`IDEMPOTENCY_KEY_REUSED`), settling an already settled withdrawal with another outcome |
 | 413 | Webhook body larger than 16 KB (`PAYLOAD_TOO_LARGE`) |
 | 422 | Business rule rejected the operation (`INSUFFICIENT_FUNDS`, `WALLET_CANNOT_SEND`, `WALLET_CANNOT_RECEIVE`, `UNKNOWN_ACCOUNT_NUMBER`, `LIMIT_EXCEEDED`, `CURRENCY_MISMATCH`, …) |
 | 503 | A wallet stayed locked longer than the lock timeout (`SERVICE_BUSY`, with `Retry-After: 1`); nothing changed and the request can be retried (L7) |
