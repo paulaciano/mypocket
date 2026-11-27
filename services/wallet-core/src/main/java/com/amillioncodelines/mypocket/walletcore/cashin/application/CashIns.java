@@ -7,8 +7,8 @@ import com.amillioncodelines.mypocket.walletcore.rejection.application.RejectedO
 import com.amillioncodelines.mypocket.walletcore.rejection.domain.RejectedOperation;
 import com.amillioncodelines.mypocket.walletcore.shared.api.ApiException;
 import com.amillioncodelines.mypocket.walletcore.shared.domain.Money;
-import com.amillioncodelines.mypocket.walletcore.wallet.application.AccountNotFoundException;
 import com.amillioncodelines.mypocket.walletcore.wallet.application.SystemWallets;
+import com.amillioncodelines.mypocket.walletcore.wallet.application.UnknownAccountNumberException;
 import com.amillioncodelines.mypocket.walletcore.wallet.application.WalletCannotReceiveException;
 import com.amillioncodelines.mypocket.walletcore.wallet.domain.SystemPurpose;
 import com.amillioncodelines.mypocket.walletcore.wallet.infrastructure.WalletRepository;
@@ -100,7 +100,8 @@ public class CashIns {
             return previous.get();
         }
         // Locked from the first read: concurrent cash-ins to this wallet wait their turn and see its current state.
-        var wallet = wallets.lockByAccountNumber(cashIn.accountNumber()).orElseThrow(AccountNotFoundException::new);
+        var wallet =
+                wallets.lockByAccountNumber(cashIn.accountNumber()).orElseThrow(UnknownAccountNumberException::new);
         if (wallet.currency() != cashIn.money().currency()) {
             throw new CurrencyMismatchException();
         }

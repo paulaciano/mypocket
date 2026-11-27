@@ -3,6 +3,20 @@
 Every rule has an ID (for example `T3`). Tests reference these IDs in their display name so each rule
 can be traced to the tests that verify it.
 
+## Glossary
+
+| Term | Meaning |
+|---|---|
+| **User** | A person who logs in: a customer or an administrator. Identified by a platform-generated user id. |
+| **Wallet** | Where a customer holds money in one currency, with its balance and status. Each customer has one wallet per currency. MyPocket as a whole is a digital wallet product; in these documents "wallet" always means this per-currency wallet. |
+| **Account number** | The public 10-digit number of a wallet, used to receive cash-ins and transfers. It names a wallet; it is not a separate concept. |
+| **System wallet** | A platform wallet with no owner and no account number, the counterpart of money entering, leaving or in transit (`EXTERNAL`, `WITHDRAWALS_IN_TRANSIT`). |
+| **Transaction** | One money movement in the ledger (cash-in, transfer, withdrawal and its settlement or reversal). |
+| **Entry** | One side of a transaction on one wallet: a debit or a credit. |
+| **External account** | An account at another institution, outside the platform: the destination of a withdrawal. |
+| **Provider reference** | The payment provider's identifier of a cash-in or a payout. |
+| **Rejected operation** | A money operation that a business rule rejected, recorded for audit. It moves no money. |
+
 ## Entities
 
 ```mermaid
@@ -61,7 +75,7 @@ The balance of a wallet is `sum(CREDIT) − sum(DEBIT)` of its entries.
 - **U2** Password is not blank and has between 8 and 64 characters, and at most 72 bytes in UTF-8 (the limit of the hashing algorithm; longer passwords are rejected, never truncated). It is stored only as a hash.
 - **U3** Registering creates the user with role `CUSTOMER` and one `ACTIVE` wallet per supported currency, with zero balance, in the same transaction.
 - **U4** Login with a wrong email or a wrong password gives the same error, so it does not reveal whether the email exists.
-- **U5** The administrator account is created at startup from configuration if it does not exist. Registration never creates administrators.
+- **U5** The administrator user is created at startup from configuration if it does not exist. Registration never creates administrators.
 
 ### Personal data (P)
 - **P1** Personal data (email, password hash) is stored only in the user module. It never appears in other tables, events, logs, or in responses about other customers.

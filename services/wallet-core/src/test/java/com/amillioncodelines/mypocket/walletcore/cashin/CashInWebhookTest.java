@@ -195,7 +195,7 @@ class CashInWebhookTest {
 
         mockMvc.perform(signed(PATH, body(newReference(), unknown, "ARS", "10.00")))
                 .andExpect(status().isUnprocessableContent())
-                .andExpect(jsonPath("$.code").value("ACCOUNT_NOT_FOUND"));
+                .andExpect(jsonPath("$.code").value("UNKNOWN_ACCOUNT_NUMBER"));
     }
 
     @Test
