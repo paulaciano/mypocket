@@ -12,7 +12,7 @@ development profile only, it is served at `/v3/api-docs`, with Swagger UI at `/s
   is expected is rejected as `MALFORMED_REQUEST`.
 - **Identifiers:** UUIDs.
 - **Timestamps:** ISO-8601 in UTC (`2026-11-20T15:04:05Z`).
-- **Idempotency:** `Idempotency-Key` header on money-moving customer operations (rules I1–I7).
+- **Idempotency:** `Idempotency-Key` header on money-moving customer operations (rules I1–I7). A repeated request gets the original status and body with the header `Idempotent-Replayed: true`.
 - **Pagination:** `?page=0&size=20` (`page` from 0, `size` from 1 to 100). Responses include
   `content`, `page`, `size`, `totalElements` and `totalPages`.
 - **Errors:** [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) Problem Details
@@ -33,10 +33,10 @@ development profile only, it is served at `/v3/api-docs`, with Swagger UI at `/s
 | 400 | Invalid field, path or query parameter (`VALIDATION_ERROR`, with an `errors` list of `field` and `message`) or malformed body / unknown fields (`MALFORMED_REQUEST`) |
 | 401 | Missing or invalid token (`UNAUTHORIZED`), wrong login credentials (`INVALID_CREDENTIALS`), missing, invalid or expired webhook signature (`INVALID_SIGNATURE`) |
 | 403 | Authenticated but not allowed for the role: a customer calling an admin endpoint or an administrator calling a customer endpoint (`FORBIDDEN`) |
-| 404 | Resource does not exist or belongs to someone else (W10), for example `WALLET_NOT_FOUND` |
+| 404 | Resource does not exist or belongs to someone else (W10), for example `WALLET_NOT_FOUND`, `TRANSFER_NOT_FOUND` |
 | 409 | Conflicting state: email already registered (`EMAIL_ALREADY_REGISTERED`), cash-in reference already applied with other data (`CASH_IN_REFERENCE_CONFLICT`), idempotency key reused with another body or operation (`IDEMPOTENCY_KEY_REUSED`), settling an already settled withdrawal with another outcome |
 | 413 | Webhook body larger than 16 KB (`PAYLOAD_TOO_LARGE`) |
-| 422 | Business rule rejected the operation (`INSUFFICIENT_FUNDS`, `WALLET_CANNOT_SEND`, `WALLET_CANNOT_RECEIVE`, `UNKNOWN_ACCOUNT_NUMBER`, `LIMIT_EXCEEDED`, `CURRENCY_MISMATCH`, …) |
+| 422 | Business rule rejected the operation (`INSUFFICIENT_FUNDS`, `SAME_WALLET`, `WALLET_CANNOT_SEND`, `WALLET_CANNOT_RECEIVE`, `UNKNOWN_ACCOUNT_NUMBER`, `LIMIT_EXCEEDED`, `CURRENCY_MISMATCH`, …) |
 | 503 | A wallet stayed locked longer than the lock timeout (`SERVICE_BUSY`, with `Retry-After: 1`); nothing changed and the request can be retried (L7) |
 
 ## Endpoints
@@ -76,8 +76,8 @@ POST /api/v1/auth/register
 | GET | `/wallets/{walletId}` | One of my wallets; another customer's wallet answers `404 WALLET_NOT_FOUND`. | W10, S4 |
 | GET | `/wallets/{walletId}/entries` | Wallet history, newest first, paginated. | L6 |
 | POST | `/wallets/{walletId}/close` | Close the wallet. `200` with the wallet. | W8, W9 |
-| POST | `/transfers` | Send money. **Idempotency-Key.** `201`. | T1–T8, I1–I6 |
-| GET | `/transfers/{transferId}` | A transfer I sent or received. | |
+| POST | `/transfers` | Send money from one of my wallets to an account number. **Idempotency-Key.** `201`. | T1–T6, T8, I1–I6 |
+| GET | `/transfers/{transferId}` | A transfer I sent or received; anyone else gets `404 TRANSFER_NOT_FOUND`. | S4 |
 | POST | `/wallets/{walletId}/withdrawals` | Request a withdrawal. **Idempotency-Key.** `202` with status `PENDING`. | CO1–CO5, I1–I6 |
 | GET | `/withdrawals/{withdrawalId}` | One of my withdrawals. | |
 

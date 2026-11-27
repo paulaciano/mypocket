@@ -40,16 +40,20 @@ public class LedgerTransaction {
     @Column(name = "external_reference")
     private String externalReference;
 
+    private String description;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     protected LedgerTransaction() {}
 
-    public LedgerTransaction(TransactionType type, Money money, String externalReference, Instant createdAt) {
+    public LedgerTransaction(
+            TransactionType type, Money money, String externalReference, String description, Instant createdAt) {
         this.type = type;
         this.currency = money.currency();
         this.amount = money.amount();
         this.externalReference = externalReference;
+        this.description = description;
         this.createdAt = createdAt;
     }
 
@@ -67,6 +71,10 @@ public class LedgerTransaction {
 
     public String externalReference() {
         return externalReference;
+    }
+
+    public String description() {
+        return description;
     }
 
     public Instant createdAt() {

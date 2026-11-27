@@ -11,4 +11,6 @@ public interface RejectedOperationRepository extends Repository<RejectedOperatio
     RejectedOperation save(RejectedOperation operation);
 
     List<RejectedOperation> findByProviderReference(String providerReference);
+
+    List<RejectedOperation> findByUserId(UUID userId);
 }

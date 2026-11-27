@@ -10,7 +10,6 @@ import com.amillioncodelines.mypocket.walletcore.IntegrationTest;
 import com.amillioncodelines.mypocket.walletcore.rejection.domain.OperationType;
 import com.amillioncodelines.mypocket.walletcore.rejection.infrastructure.RejectedOperationRepository;
 import com.amillioncodelines.mypocket.walletcore.shared.domain.Currency;
-import com.amillioncodelines.mypocket.walletcore.shared.domain.Money;
 import com.amillioncodelines.mypocket.walletcore.user.application.RegistrationService;
 import com.amillioncodelines.mypocket.walletcore.wallet.domain.Wallet;
 import java.util.UUID;
@@ -55,7 +54,8 @@ class RejectedCashInTest {
         assertThat(record.type()).isEqualTo(OperationType.CASH_IN);
         assertThat(record.reason()).isEqualTo("CURRENCY_MISMATCH");
         assertThat(record.destinationAccountNumber()).isEqualTo(wallet.accountNumber());
-        assertThat(record.money()).isEqualTo(Money.of("15.50", Currency.USD));
+        assertThat(record.amount()).isEqualByComparingTo("15.50");
+        assertThat(record.currency()).isEqualTo(Currency.USD);
         assertThat(record.userId()).isNull();
         assertThat(record.sourceWalletId()).isNull();
         assertThat(record.createdAt()).isNotNull();
@@ -84,7 +84,7 @@ class RejectedCashInTest {
                 .isEqualTo("WALLET_CANNOT_RECEIVE");
         assertThat(rejected.findByProviderReference(conflict)).singleElement().satisfies(record -> {
             assertThat(record.reason()).isEqualTo("CASH_IN_REFERENCE_CONFLICT");
-            assertThat(record.money()).isEqualTo(Money.of("2.00", Currency.ARS));
+            assertThat(record.amount()).isEqualByComparingTo("2.00");
         });
     }
 

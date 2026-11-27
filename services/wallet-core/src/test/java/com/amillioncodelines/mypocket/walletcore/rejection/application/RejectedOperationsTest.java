@@ -8,6 +8,7 @@ import com.amillioncodelines.mypocket.walletcore.shared.domain.Currency;
 import com.amillioncodelines.mypocket.walletcore.shared.domain.Money;
 import java.time.Clock;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.TransactionDefinition;
@@ -27,6 +28,11 @@ class RejectedOperationsTest {
 
             @Override
             public List<RejectedOperation> findByProviderReference(String providerReference) {
+                return List.of();
+            }
+
+            @Override
+            public List<RejectedOperation> findByUserId(UUID userId) {
                 return List.of();
             }
         };
