@@ -23,6 +23,7 @@ erDiagram
 | **LedgerEntry** | id, transaction, wallet, direction (`DEBIT`, `CREDIT`), amount, created at |
 | **Withdrawal** | id, wallet, amount, destination (free-text external account), status (`PENDING`, `COMPLETED`, `FAILED`), provider reference, created at, settled at |
 | **IdempotencyRecord** | user, key, request fingerprint, response status, response body, created at |
+| **RejectedOperation** | id, type (`CASH_IN`, `TRANSFER`, `WITHDRAWAL`), reason (the error code), user (customer operations), provider reference (cash-ins), source wallet, destination account number, currency, amount, created at |
 | **OutboxEvent** | id, type, aggregate key, payload (JSON), created at, published at |
 
 ### System wallets
@@ -145,6 +146,11 @@ The balance of a wallet is `sum(CREDIT) − sum(DEBIT)` of its entries.
 - **E2** Events are published at least once. Consumers deduplicate by event id.
 - **E3** Events of the same wallet are published in the order they were committed.
 - **E4** Each fraud alert emits a `FraudAlertTriggered` event, with the requested status, that wallet-core consumes to restrict the wallet (W6).
+
+### Rejected operations (R)
+- **R1** Every money operation rejected by a business rule (cash-ins with a valid signature, and customer transfers and withdrawals) is recorded with its type, the identifiers it named, the amount, the currency, the reason and the time. The record is kept even though the operation rolls back; if it cannot be written, the failure is logged and the caller still receives the original rejection.
+- **R2** Rejected operations move no money, are not part of the ledger, and are never updated or deleted.
+- **R3** Requests rejected before reaching the business rules (invalid signature, malformed or invalid body, missing authentication or idempotency key) are not recorded. Transfer descriptions are never recorded.
 
 ## Configuration defaults
 

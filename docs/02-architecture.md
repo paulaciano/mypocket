@@ -77,6 +77,7 @@ com.amillioncodelines.mypocket.walletcore
 ├── transfer/
 ├── cashout/     # withdrawals, limits, provider confirmation
 ├── idempotency/
+├── rejection/   # record of operations rejected by a business rule
 ├── events/      # outbox, relay, Kafka consumer of fraud alerts
 └── shared/      # money, errors, security config, clock
 ```
